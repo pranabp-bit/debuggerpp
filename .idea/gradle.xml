@@ -9,6 +9,8 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/vendor" />
+            <option value="$PROJECT_DIR$/vendor/slicer4j" />
+            <option value="$PROJECT_DIR$/vendor/slicer4j/Slicer4J" />
             <option value="$PROJECT_DIR$/vendor/slicing-core" />
             <option value="$PROJECT_DIR$/vendor/slicing-core/core" />
           </set>

@@ -21,13 +21,7 @@ intellij {
 }
 
 dependencies {
-    implementation(project(":vendor:slicing-core:core", "default"))
-    implementation("de.tud.sse:soot-infoflow:2.9.0")
-    constraints {
-        implementation("org.soot-oss:soot:4.3.0") {
-            because("soot-infoflow:2.9.0 on maven central has a broken dependency")
-        }
-    }
+    implementation(project(":vendor:slicer4j:Slicer4J", "default"))
 }
 
 tasks {
