@@ -50,12 +50,13 @@ class TraceRunner : DefaultJavaProgramRunner() {
                 //  will work for the demo.
                 val inJar = JarInputStream(BufferedInputStream(FileInputStream(runProfile.jarPath)))
                 val mainClass = inJar.manifest.mainAttributes.getValue("Main-Class")
-                val outPath = createTempFile("slicer4j-instrumented", ".jar")
-                val loggerPath = createTempFile("slicer4-logger", ".jar")
+                val outPath = createTempFile("slicer4j-instrumented-", ".jar")
+                val loggerPath = createTempFile("slicer4-logger-", ".jar")
                 val loggerJar = Slicer::class.java.getResourceAsStream("/DynamicSlicingLogger.jar")
                 Files.copy(loggerJar, loggerPath, StandardCopyOption.REPLACE_EXISTING)
                 val instrumenter = JavaInstrumenter(outPath.pathString)
-                instrumenter.start("", "/tmp/slicer4j-static.log", javaParameters.jarPath, loggerPath.toString())
+                val staticLogFile = createTempFile("slicer4j-static-", ".log")
+                instrumenter.start("", staticLogFile.pathString, javaParameters.jarPath, loggerPath.toString())
                 javaParameters.classPath.add(outPath.pathString)
                 javaParameters.mainClass = mainClass
                 loggerPath.deleteIfExists()
