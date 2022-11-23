@@ -1,6 +1,5 @@
 package team57.debuggerpp.execute
 
-import ca.ubc.ece.resess.slicer.dynamic.slicer4j.Slicer
 import com.intellij.debugger.DebugEnvironment
 import com.intellij.debugger.DebuggerManagerEx
 import com.intellij.debugger.DefaultDebugEnvironment
@@ -23,8 +22,6 @@ import com.intellij.xdebugger.impl.XDebugSessionImpl
 import team57.debuggerpp.slicer.JavaSlicer
 import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.trace.SliceJavaDebugProcess
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.util.concurrent.atomic.AtomicReference
 
 class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
@@ -34,16 +31,7 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
         private val LOG = Logger.getInstance(DynamicSliceDebuggerRunner::class.java)
     }
 
-    private val loggerPath: String
-    private val slicer: JavaSlicer
-
-    init {
-        val loggerFile = kotlin.io.path.createTempFile("slicer4-logger-", ".jar")
-        val loggerJar = Slicer::class.java.getResourceAsStream("/DynamicSlicingLogger.jar")!!
-        Files.copy(loggerJar, loggerFile, StandardCopyOption.REPLACE_EXISTING)
-        loggerPath = loggerFile.toString()
-        slicer = JavaSlicer()
-    }
+    private val slicer = JavaSlicer()
 
     override fun getRunnerId() = ID
 
@@ -101,13 +89,16 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
         val task =
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
                 override fun compute(indicator: ProgressIndicator): ProgramSlice {
+                    val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-slice-output")
+                    // Runtime.getRuntime().exec("explorer $outputDirectory")
+
                     indicator.text = "Instrumenting"
-                    val instrumentedState = slicer.instrument(env)
+                    val (instrumentedState, processingDirectory) = slicer.instrument(env, outputDirectory)
                     indicator.text = "Collecting trace"
                     val executionResult = instrumentedState.execute(env.executor, env.runner)!!
-                    val stdoutPath = slicer.collectTrace(executionResult)
+                    val stdoutPath = slicer.collectTrace(executionResult, outputDirectory)
                     indicator.text = "Slicing"
-                    return slicer.slice(stdoutPath)
+                    return slicer.slice(stdoutPath, processingDirectory, outputDirectory)
                 }
             }
         task.queue() // This runs synchronously for modal tasks

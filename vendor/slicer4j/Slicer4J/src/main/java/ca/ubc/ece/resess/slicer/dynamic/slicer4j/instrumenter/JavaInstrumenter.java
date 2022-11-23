@@ -64,10 +64,10 @@ public class JavaInstrumenter extends Instrumenter {
     }
 
     void initialize(String jarPath, String loggerJar) {
-        initialize(Arrays.asList(jarPath, loggerJar));
+        initialize(Arrays.asList(jarPath, loggerJar), Slicer.SOOT_OUTPUT_STRING);
     }
 
-    void initialize(List<String> processDirectories) {
+    void initialize(List<String> processDirectories, String outDir) {
         AnalysisLogger.log(true, "Initializing Instrumenter");
         createInstrumentationPackagesList();
         Scene.v().addBasicClass("java.io.PrintStream",SootClass.SIGNATURES);
@@ -84,7 +84,7 @@ public class JavaInstrumenter extends Instrumenter {
         Options.v().set_allow_phantom_refs(true);
         Options.v().set_process_dir(processDirectories);
         Options.v().set_output_format(Options.output_format_class);
-        Options.v().set_output_dir(Slicer.SOOT_OUTPUT_STRING);
+        Options.v().set_output_dir(outDir);
         Options.v().set_keep_line_number(true);
         Options.v().set_write_local_annotations(true);
         Options.v().setPhaseOption("jb", "use-original-names:true");
@@ -226,10 +226,10 @@ public class JavaInstrumenter extends Instrumenter {
 
     @Override
     public void start(String options, String staticLogFile, String jarPath, String loggerJar) {
-        startInstrumentingJar(options, staticLogFile, jarPath, loggerJar);
+        instrumentJar(options, staticLogFile, jarPath, loggerJar, Slicer.SOOT_OUTPUT_STRING);
     }
 
-    public void startInstrumentingJar(String options, String staticLogFile, String jarPath, String loggerJar) {
+    public void instrumentJar(String options, String staticLogFile, String jarPath, String loggerJar, String outDir) {
         soot.G.reset();
         if (options.contains("field")) {
             this.fieldTracking = true;
@@ -285,12 +285,12 @@ public class JavaInstrumenter extends Instrumenter {
         AnalysisLogger.log(true, "Number of Jimple statements (jarSize): {}", jarSize.toString());
         AnalysisLogger.log(true, "Writing JAR");
         try {
-            AnalysisLogger.log(true, "Soot file: {}", new File(Slicer.SOOT_OUTPUT_STRING));
-            AnalysisLogger.log(true, "Soot file is directory?: {}", new File(Slicer.SOOT_OUTPUT_STRING).isDirectory());
-            if (new File(Slicer.SOOT_OUTPUT_STRING).isDirectory()) {
+            AnalysisLogger.log(true, "Soot file: {}", new File(outDir));
+            AnalysisLogger.log(true, "Soot file is directory?: {}", new File(outDir).isDirectory());
+            if (new File(outDir).isDirectory()) {
                 // File unzipDir = new File("unzip_dir");
                 // unzipDir.mkdir();
-                unzipTo(new File(jarPath), new File(Slicer.SOOT_OUTPUT_STRING));
+                unzipTo(new File(jarPath), new File(outDir));
 
                 File dir = new File(jarName).getParentFile();
                 if (!dir.exists()) {
@@ -308,7 +308,7 @@ public class JavaInstrumenter extends Instrumenter {
                 }
 
                 List<String> instrumentedClasses = new ArrayList<>();
-                listDirectory(new File(Slicer.SOOT_OUTPUT_STRING).getAbsolutePath()+1, Slicer.SOOT_OUTPUT_STRING, 0, instrumentedClasses);
+                listDirectory(new File(outDir).getAbsolutePath()+1, outDir, 0, instrumentedClasses);
 
                 AnalysisLogger.log(true, "Number of classes: {}", instrumentedClasses.size());
                 int numFiles = 100;
@@ -323,7 +323,7 @@ public class JavaInstrumenter extends Instrumenter {
                         jarOptions = "uf";
                     }
 
-                    Process p = Runtime.getRuntime().exec("jar " + jarOptions + " " + jarName + " " + clazzFile, null, new File(Slicer.SOOT_OUTPUT_STRING));
+                    Process p = Runtime.getRuntime().exec("jar " + jarOptions + " " + jarName + " " + clazzFile, null, new File(outDir));
                     p.waitFor();
                     // String output = IOUtils.toString(p.getInputStream());
                     // String errorOutput = IOUtils.toString(p.getErrorStream());
@@ -348,7 +348,7 @@ public class JavaInstrumenter extends Instrumenter {
      * @return paths to the output class files
      * @throws IOException
      */
-    public List<String> instrumentClassPaths(String options, String staticLogFile, List<String> classPaths, String loggerJar) throws IOException {
+    public List<String> instrumentClassPaths(String options, String staticLogFile, List<String> classPaths, String loggerJar, String outDir) throws IOException {
         soot.G.reset();
         if (options.contains("field")) {
             this.fieldTracking = true;
@@ -366,7 +366,7 @@ public class JavaInstrumenter extends Instrumenter {
         List<String> processDirectories = new ArrayList<>(classPaths.size() + 1);
         processDirectories.addAll(classPaths);
         processDirectories.add(loggerJar);
-        initialize(processDirectories);
+        initialize(processDirectories, outDir);
 
         runMethodTransformationPack();
         Scene.v().loadNecessaryClasses();
@@ -381,16 +381,16 @@ public class JavaInstrumenter extends Instrumenter {
         FileUtils.writeStringToFile(new File(staticLogFile), staticLog.toString(), "UTF-8", true);
 
         AnalysisLogger.log(true, "Number of Jimple statements (jarSize): {}", jarSize.toString());
-        AnalysisLogger.log(true, "Soot file: {}", new File(Slicer.SOOT_OUTPUT_STRING));
+        AnalysisLogger.log(true, "Soot file: {}", new File(outDir));
 
         for (String classPath : classPaths) {
-            copyIfMissing(new File(classPath), new File(Slicer.SOOT_OUTPUT_STRING));
+            copyIfMissing(new File(classPath), new File(outDir));
         }
 
         List<String> instrumentedClasses = new ArrayList<>();
-        listDirectory(new File(Slicer.SOOT_OUTPUT_STRING).getAbsolutePath()+1, Slicer.SOOT_OUTPUT_STRING, 0, instrumentedClasses);
+        listDirectory(new File(outDir).getAbsolutePath()+1, outDir, 0, instrumentedClasses);
         AnalysisLogger.log(true, "Number of classes: {}", instrumentedClasses.size());
-        return Collections.singletonList(Slicer.SOOT_OUTPUT_STRING);
+        return Collections.singletonList(outDir);
     }
 
     private void copyIfMissing(File source, File destination) throws IOException {
