@@ -93,6 +93,8 @@ public class JavaInstrumenter extends Instrumenter {
         Options.v().set_process_dir(Arrays.asList(jarPath, loggerJar));
         Options.v().set_output_format(Options.output_format_class);
         Options.v().set_output_dir(Slicer.SOOT_OUTPUT_STRING);
+        Options.v().set_keep_line_number(true);
+        Options.v().set_write_local_annotations(true);
         Options.v().setPhaseOption("jb", "use-original-names:true");
         libClasses = Scene.v().getLibraryClasses();
         AnalysisLogger.log(true, "Initialization done");
