@@ -6,9 +6,10 @@
     <description>Seamless integration for Slicer4J.</description>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
+    <depends>com.intellij.modules.xdebugger</depends>
     <extensions defaultExtensionNs="com.intellij">
-        <executor implementation="team57.debuggerpp.trace.TraceExecutor" />
-        <programRunner implementation="team57.debuggerpp.trace.TraceRunner" />
+        <executor implementation="team57.debuggerpp.execute.DynamicSliceDebuggerExecutor" />
+        <programRunner implementation="team57.debuggerpp.execute.DynamicSliceDebuggerRunner" />
     </extensions>
     <actions>
         <group>
