@@ -1,5 +1,7 @@
 package team57.debuggerpp.slicer
 
+import ca.ubc.ece.resess.slicer.dynamic.core.graph.Parser
+import ca.ubc.ece.resess.slicer.dynamic.core.graph.Trace
 import ca.ubc.ece.resess.slicer.dynamic.slicer4j.Slicer
 import ca.ubc.ece.resess.slicer.dynamic.slicer4j.instrumenter.JavaInstrumenter
 import com.intellij.execution.ExecutionException
@@ -21,8 +23,11 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.*
 import java.util.jar.JarInputStream
+import java.util.zip.InflaterOutputStream
 import java.util.zip.ZipInputStream
+import kotlin.io.path.bufferedReader
 import kotlin.io.path.bufferedWriter
+import kotlin.io.path.outputStream
 import kotlin.io.path.pathString
 
 class JavaSlicer {
@@ -53,10 +58,13 @@ class JavaSlicer {
      * TODO: Find a way for IntelliJ to consider this a build task that does not need to be repeated if we've already
      * instrumented this JAR before.
      */
-    fun instrument(env: ExecutionEnvironment, outputDirectory: Path): Pair<RunProfileState, List<String>> {
+    fun instrument(
+        env: ExecutionEnvironment,
+        outputDirectory: Path,
+        staticLog: Path
+    ): Pair<RunProfileState, List<String>> {
         val state = env.state!!
         val processingDirectory: List<String>
-        val staticLogFile = outputDirectory.resolve("slicer4j-static.log")
         val sootOutputDirectory = outputDirectory.resolve("soot-output")
         val instrumentationOptions = ""
         when (state) {
@@ -68,7 +76,7 @@ class JavaSlicer {
                 JavaInstrumenter(outJarPath)
                     .instrumentJar(
                         instrumentationOptions,
-                        staticLogFile.pathString,
+                        staticLog.pathString,
                         params.jarPath,
                         loggerPath,
                         sootOutputDirectory.pathString
@@ -84,7 +92,7 @@ class JavaSlicer {
                 val instrumentedClasPaths = JavaInstrumenter()
                     .instrumentClassPaths(
                         instrumentationOptions,
-                        staticLogFile.pathString,
+                        staticLog.pathString,
                         instrumentClassPaths,
                         loggerPath,
                         sootOutputDirectory.pathString
@@ -99,31 +107,65 @@ class JavaSlicer {
         return Pair(state, processingDirectory)
     }
 
-    fun collectTrace(executionResult: ExecutionResult, outputDirectory: Path): Path {
-        val stdoutPath = outputDirectory.resolve("instrumented-stdout.log")
-        val stdoutWriter = stdoutPath.bufferedWriter()
-        executionResult.processHandler.addProcessListener(object : ProcessAdapter() {
-            override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                if (outputType === ProcessOutputTypes.STDOUT) {
-                    stdoutWriter.write(event.text)
+    fun collectTrace(executionResult: ExecutionResult, outputDirectory: Path, staticLog: Path): Trace {
+        val stdoutLog = outputDirectory.resolve("instrumented-stdout.log")
+
+        stdoutLog.bufferedWriter().use { writer ->
+            executionResult.processHandler.addProcessListener(object : ProcessAdapter() {
+                override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                    if (outputType === ProcessOutputTypes.STDOUT) {
+                        writer.write(event.text)
+                    }
                 }
-            }
-        })
-        executionResult.processHandler.startNotify()
-        executionResult.processHandler.waitFor()
-        stdoutWriter.close()
-        return stdoutPath
+            })
+            executionResult.processHandler.startNotify()
+            executionResult.processHandler.waitFor()
+        }
+
+        val trace = Parser.readFile(stdoutLog.pathString, staticLog.pathString)
+        saveTrace(trace, outputDirectory)
+        extractRawTrace(stdoutLog, outputDirectory)
+
+        return trace
     }
 
-    fun slice(trace: Path, processingDirectory: List<String>, outputDirectory: Path): ProgramSlice {
+    fun slice(trace: Trace, processingDirectory: List<String>, outputDirectory: Path): ProgramSlice {
         // TODO
 //        val icdgPath = outputDirectory.resolve("icdg.log")
 //        val backwardSlicePositions: List<Int> = listOf(3)
-//        Slicer.slice(outputDirectory.pathString, trace.pathString, icdgPath.pathString, processingDirectory,
+//
+//        Slicer.slice(
+//            outputDirectory.pathString, trace, icdgPath.pathString, processingDirectory,
 //            backwardSlicePositions, stubDroidPath, taintWrapperPath,
 //            null, null,
 //            true, false, false, false
 //        )
         return ProgramSlice()
+    }
+
+    private fun saveTrace(trace: Trace, outputDirectory: Path) {
+        outputDirectory.resolve("trace.log")
+            .bufferedWriter().use { writer ->
+                for (statement in trace) {
+                    writer.write(statement.toString())
+                    writer.write("\n")
+                }
+            }
+    }
+
+    private fun extractRawTrace(stdoutLog: Path, outputDirectory: Path) {
+        val rawTraceLog = outputDirectory.resolve("raw-trace.log")
+        rawTraceLog.outputStream().use { os ->
+            val inflaterOutputStream = InflaterOutputStream(os)
+            stdoutLog.bufferedReader().useLines { lines ->
+                for (line in lines) {
+                    if (line.contains(" ZLIB: ")) {
+                        val encoded = line.split(" ZLIB: ")[1]
+                        val decoded = Base64.getDecoder().decode(encoded)
+                        inflaterOutputStream.write(decoded)
+                    }
+                }
+            }
+        }
     }
 }

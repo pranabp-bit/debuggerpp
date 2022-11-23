@@ -22,6 +22,7 @@ import com.intellij.xdebugger.impl.XDebugSessionImpl
 import team57.debuggerpp.slicer.JavaSlicer
 import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.trace.SliceJavaDebugProcess
+import java.awt.Desktop
 import java.util.concurrent.atomic.AtomicReference
 
 class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
@@ -90,15 +91,18 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
                 override fun compute(indicator: ProgressIndicator): ProgramSlice {
                     val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-slice-output")
-                    // Runtime.getRuntime().exec("explorer $outputDirectory")
+                    val staticLog = outputDirectory.resolve("slicer4j-static.log")
+                    Desktop.getDesktop().open(outputDirectory.toFile())
 
                     indicator.text = "Instrumenting"
-                    val (instrumentedState, processingDirectory) = slicer.instrument(env, outputDirectory)
+                    val (instrumentedState, processingDirectory) = slicer.instrument(env, outputDirectory, staticLog)
+
                     indicator.text = "Collecting trace"
                     val executionResult = instrumentedState.execute(env.executor, env.runner)!!
-                    val stdoutPath = slicer.collectTrace(executionResult, outputDirectory)
+                    val trace = slicer.collectTrace(executionResult, outputDirectory, staticLog)
+
                     indicator.text = "Slicing"
-                    return slicer.slice(stdoutPath, processingDirectory, outputDirectory)
+                    return slicer.slice(trace, processingDirectory, outputDirectory)
                 }
             }
         task.queue() // This runs synchronously for modal tasks
