@@ -90,7 +90,7 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
         val task =
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
                 override fun compute(indicator: ProgressIndicator): ProgramSlice {
-                    val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-slice-output")
+                    val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-outputs-")
                     val staticLog = outputDirectory.resolve("slicer4j-static.log")
                     Desktop.getDesktop().open(outputDirectory.toFile())
 

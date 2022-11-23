@@ -46,7 +46,7 @@ class JavaSlicer {
         Files.copy(loggerJar, loggerFile, StandardCopyOption.REPLACE_EXISTING)
         loggerPath = loggerFile.toString()
 
-        val modelsDirectory = kotlin.io.path.createTempDirectory("slicer4-models")
+        val modelsDirectory = kotlin.io.path.createTempDirectory("slicer4-models-")
         val modelsZip = Slicer::class.java.getResourceAsStream("/models.zip")!!
         Utils.unzipAll(ZipInputStream(modelsZip), modelsDirectory)
         modelsPath = modelsDirectory.toString()
@@ -65,7 +65,7 @@ class JavaSlicer {
     ): Pair<RunProfileState, List<String>> {
         val state = env.state!!
         val processingDirectory: List<String>
-        val sootOutputDirectory = outputDirectory.resolve("soot-output")
+        val sootOutputDirectory = outputDirectory.resolve("instrumented")
         val instrumentationOptions = ""
         when (state) {
             is JarApplicationCommandLineState -> {
