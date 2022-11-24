@@ -1,25 +1,11 @@
 package ca.ubc.ece.resess.slicer.dynamic.slicer4j;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.Map.Entry;
 
 import com.google.common.base.Optional;
@@ -169,7 +155,7 @@ public class Slicer {
         return workingSet;
     }
 
-    void printList(List <String> list, String outFile) {
+    static void printList(List <String> list, String outFile) {
         try {
             AnalysisLogger.log(Constants.DEBUG, "Printing to {}", outFile);
             FileUtils.writeLines(new File(outFile), list);
@@ -367,6 +353,10 @@ public class Slicer {
     }
 
     public List<String> printGraph(DynamicControlFlowGraph icdg) {
+        return printGraph(icdg, outFile);
+    }
+
+    public static List<String> printGraph(DynamicControlFlowGraph icdg, String outFile) {
         AnalysisLogger.log(Constants.DEBUG, "Printing graph...");
         List <String> listToPrint = new ArrayList<>();
         Iterator<Entry<Integer, StatementInstance>> entries = icdg.getMapNumberUnits().entrySet().iterator();
@@ -460,16 +450,15 @@ public class Slicer {
 
     public void prepare() {
         if (pathJar.endsWith(".jar")) {
-            prepareProcessingJAR(pathJar);
+            AnalysisLogger.log(Constants.DEBUG, "Processing JAR: {}", pathJar);
+            prepare(Collections.singletonList(pathJar));
+            AnalysisLogger.log(Constants.DEBUG, "Done processing the JAR");
         } else {
             throwParseException("Not a jar file!");
         }
-        
     }
 
-    private void prepareProcessingJAR(String pathJar) {
-        
-        AnalysisLogger.log(Constants.DEBUG, "Processing JAR: {}", pathJar);
+    public static void prepare(List<String> processDirectories) {
         soot.G.reset();
         Options.v().set_prepend_classpath(true);
         // Options.v().set_soot_classpath("VIRTUAL_FS_FOR_JDK");
@@ -478,17 +467,15 @@ public class Slicer {
         Options.v().set_exclude(excludePackagesList);
         Options.v().set_no_bodies_for_excluded(true);
         Options.v().set_allow_phantom_refs(true);
-        Options.v().set_process_dir(Arrays.asList(pathJar));
+        Options.v().set_process_dir(processDirectories);
         Options.v().set_output_format(Options.output_format_jimple);
         Options.v().set_keep_line_number(true);
-        
         // Options.v().set_whole_program(true);
         // Options.v().set_allow_phantom_refs(true);
         // Options.v().setPhaseOption("cg.spark", "on");
         Options.v().setPhaseOption("jb", "use-original-names:true");
         Scene.v().loadNecessaryClasses();
         PackManager.v().runPacks();
-        AnalysisLogger.log(Constants.DEBUG, "Done processing the JAR");
     }
 
     public static void loadClassToSoot(String name, String module) {

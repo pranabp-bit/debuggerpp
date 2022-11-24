@@ -1,7 +1,14 @@
 package team57.debuggerpp.slicer
 
+import ca.ubc.ece.resess.slicer.dynamic.core.accesspath.AccessPath
+import ca.ubc.ece.resess.slicer.dynamic.core.framework.FrameworkModel
+import ca.ubc.ece.resess.slicer.dynamic.core.graph.DynamicControlFlowGraph
 import ca.ubc.ece.resess.slicer.dynamic.core.graph.Parser
 import ca.ubc.ece.resess.slicer.dynamic.core.graph.Trace
+import ca.ubc.ece.resess.slicer.dynamic.core.slicer.DynamicSlice
+import ca.ubc.ece.resess.slicer.dynamic.core.slicer.SlicePrinter
+import ca.ubc.ece.resess.slicer.dynamic.core.slicer.SlicingWorkingSet
+import ca.ubc.ece.resess.slicer.dynamic.core.statements.StatementInstance
 import ca.ubc.ece.resess.slicer.dynamic.slicer4j.Slicer
 import ca.ubc.ece.resess.slicer.dynamic.slicer4j.instrumenter.JavaInstrumenter
 import com.intellij.execution.ExecutionException
@@ -21,12 +28,16 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.util.io.write
 import org.jetbrains.java.decompiler.IdeaDecompiler
+import soot.Type
 import team57.debuggerpp.util.Utils
 import java.io.BufferedInputStream
+import java.io.File
 import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.jar.JarInputStream
 import java.util.zip.InflaterOutputStream
@@ -67,7 +78,7 @@ class JavaSlicer {
         staticLog: Path
     ): Pair<RunProfileState, List<String>> {
         val state = env.state!!
-        val processingDirectory: List<String>
+        val processDirs: List<String>
         val sootOutputDirectory = outputDirectory.resolve("soot-output")
         val instrumentationOptions = ""
         sootOutputDirectory.toFile().mkdir()
@@ -86,7 +97,7 @@ class JavaSlicer {
                         sootOutputDirectory.pathString
                     )
                 params.classPath.add(outJarPath)
-                processingDirectory = Collections.singletonList(params.jarPath)
+                processDirs = Collections.singletonList(params.jarPath)
             }
 
             is JavaCommandLineState -> {
@@ -103,13 +114,13 @@ class JavaSlicer {
                     )
                 instrumentClassPaths.forEach { params.classPath.remove(it) }
                 params.classPath.addAll(instrumentedClasPaths)
-                processingDirectory = instrumentClassPaths
+                processDirs = instrumentClassPaths
             }
 
             else -> throw ExecutionException("Unable to instrument this type of RunProfileState")
         }
-        decompileAll(env.project, sootOutputDirectory)
-        return Pair(state, processingDirectory)
+        decompileAll(env.project, sootOutputDirectory) // Optional, for debugging purposes
+        return Pair(state, processDirs)
     }
 
     fun collectTrace(executionResult: ExecutionResult, outputDirectory: Path, staticLog: Path): Trace {
@@ -134,18 +145,33 @@ class JavaSlicer {
         return trace
     }
 
-    fun slice(trace: Trace, processingDirectory: List<String>, outputDirectory: Path): ProgramSlice {
-        // TODO
-//        val icdgPath = outputDirectory.resolve("icdg.log")
-//        val backwardSlicePositions: List<Int> = listOf(3)
-//
-//        Slicer.slice(
-//            outputDirectory.pathString, trace, icdgPath.pathString, processingDirectory,
-//            backwardSlicePositions, stubDroidPath, taintWrapperPath,
-//            null, null,
-//            true, false, false, false
-//        )
-        return ProgramSlice()
+    fun createDynamicControlFlowGraph(output: Path, trace: Trace, processDirs: List<String>): DynamicControlFlowGraph {
+        Slicer.prepare(processDirs)
+        val graph = DynamicControlFlowGraph()
+        graph.createDCFG(trace)
+        LOG.debug("size of the trace after loading: " + graph.mapNumberUnits.keys.size)
+        Slicer.printGraph(graph, output.pathString)
+        return graph
+    }
+
+    fun locateSlicingCriteria(graph: DynamicControlFlowGraph, file: String, lineNo: Int): List<StatementInstance> {
+        return graph.mapNumberUnits.values
+            .filter { statement -> statement.javaSourceFile == file && statement.javaSourceLineNo == lineNo }
+            .toList()
+    }
+
+    fun slice(
+        icdg: DynamicControlFlowGraph,
+        slicingCriteria: List<StatementInstance>,
+        processDirs: List<String>,
+        outDir: Path
+    ): ProgramSlice {
+        val slice = slice(
+            outDir.pathString, icdg, processDirs,
+            slicingCriteria.map { s -> s.lineNo }, stubDroidPath, taintWrapperPath,
+            null, null, true, false
+        )
+        return ProgramSlice(slice)
     }
 
     private fun decompileAll(project: Project, sootOutput: Path) {
@@ -186,5 +212,71 @@ class JavaSlicer {
                 }
             }
         }
+    }
+
+    private fun slice(
+        outDir: String, icdg: DynamicControlFlowGraph, processDirectories: List<String?>?,
+        backwardSlicePositions: List<Int?>, stubDroidPath: String?, taintWrapperPath: String?,
+        frameworkPath: String?, variableString: String?, frameworkModel: Boolean, sliceOnce: Boolean
+    ): DynamicSlice {
+        Slicer.prepare(processDirectories)
+        val slicer = Slicer()
+        slicer.setVariableString(variableString ?: "*")
+
+        FrameworkModel.setStubDroidPath(stubDroidPath)
+        FrameworkModel.setTaintWrapperFile(taintWrapperPath)
+        FrameworkModel.setExtraPath(frameworkPath)
+
+        /* Process slicing criteria */
+        val stmts: MutableList<StatementInstance> = ArrayList()
+        for (backSlicePos: Int? in backwardSlicePositions) {
+            stmts.add(icdg.mapNoUnits(backSlicePos!!))
+        }
+
+        val variables: MutableList<String> = ArrayList()
+        if ("*" != variableString && variableString != null) {
+            val split = variableString.split("-".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            for (s: String in split) {
+                variables.add("$$s")
+            }
+        }
+
+        val accessPaths: MutableSet<AccessPath> = HashSet()
+        for (v: String? in variables) {
+            for (stmt: StatementInstance in stmts) {
+                accessPaths.add(AccessPath(v, object : Type() {
+                    override fun toString(): String {
+                        return "SlicingCriterionType"
+                    }
+                }, stmt.lineNo, AccessPath.NOT_DEFINED, stmt))
+            }
+        }
+
+        /* Start slicing */
+        val dynamicSlice = slicer.slice(
+            icdg,
+            frameworkModel,
+            false,
+            false,
+            sliceOnce,
+            stmts,
+            accessPaths,
+            SlicingWorkingSet(false)
+        )
+
+        /* Save results to files */
+        SlicePrinter.printSlices(dynamicSlice)
+        SlicePrinter.printSliceGraph(dynamicSlice)
+        SlicePrinter.printDotGraph(outDir, dynamicSlice)
+        SlicePrinter.printSliceLines(outDir, dynamicSlice)
+        SlicePrinter.printRawSlice(outDir, dynamicSlice)
+        SlicePrinter.printSliceWithDependencies(outDir, dynamicSlice, backwardSlicePositions)
+        SlicePrinter.printToCSV(
+            outDir + File.separator + "result_s_" +
+                    DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss").format(LocalDateTime.now()) + ".csv",
+            dynamicSlice
+        )
+
+        return dynamicSlice
     }
 }

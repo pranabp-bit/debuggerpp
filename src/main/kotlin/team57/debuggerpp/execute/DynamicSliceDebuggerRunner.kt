@@ -90,19 +90,36 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
         val task =
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
                 override fun compute(indicator: ProgressIndicator): ProgramSlice {
+                    val slicingCriteriaFile = "Main"
+                    val slicingCriteriaLineNo = 6
+
                     val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-outputs-")
                     val staticLog = outputDirectory.resolve("slicer4j-static.log")
+                    val icdgLog = outputDirectory.resolve("icdg.log")
                     Desktop.getDesktop().open(outputDirectory.toFile())
 
                     indicator.text = "Instrumenting"
-                    val (instrumentedState, processingDirectory) = slicer.instrument(env, outputDirectory, staticLog)
+                    val (instrumentedState, processDirs) = slicer.instrument(env, outputDirectory, staticLog)
 
                     indicator.text = "Collecting trace"
                     val executionResult = instrumentedState.execute(env.executor, env.runner)!!
                     val trace = slicer.collectTrace(executionResult, outputDirectory, staticLog)
 
+                    indicator.text = "Creating dynamic control flow graph"
+                    val graph = slicer.createDynamicControlFlowGraph(icdgLog, trace, processDirs)
+
+                    indicator.text = "Locating slicing criteria"
+                    val slicingCriteria =
+                        slicer.locateSlicingCriteria(graph, slicingCriteriaFile, slicingCriteriaLineNo)
+                    if (slicingCriteria.isEmpty()) {
+                        throw ExecutionException(
+                            "Unable to locate $slicingCriteriaFile:$slicingCriteriaLineNo " +
+                                    "in the dynamic control flow graph"
+                        )
+                    }
+
                     indicator.text = "Slicing"
-                    return slicer.slice(trace, processingDirectory, outputDirectory)
+                    return slicer.slice(graph, slicingCriteria, processDirs, outputDirectory)
                 }
             }
         task.queue() // This runs synchronously for modal tasks

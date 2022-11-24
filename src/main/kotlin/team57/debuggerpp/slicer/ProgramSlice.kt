@@ -1,3 +1,5 @@
 package team57.debuggerpp.slicer
 
-class ProgramSlice
+import ca.ubc.ece.resess.slicer.dynamic.core.slicer.DynamicSlice
+
+class ProgramSlice(dynamicSlice: DynamicSlice)
