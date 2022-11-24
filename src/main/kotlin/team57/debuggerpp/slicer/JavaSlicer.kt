@@ -13,8 +13,14 @@ import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.execution.runners.ExecutionEnvironment
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.util.io.write
+import org.jetbrains.java.decompiler.IdeaDecompiler
 import team57.debuggerpp.util.Utils
 import java.io.BufferedInputStream
 import java.io.FileInputStream
@@ -25,10 +31,7 @@ import java.util.*
 import java.util.jar.JarInputStream
 import java.util.zip.InflaterOutputStream
 import java.util.zip.ZipInputStream
-import kotlin.io.path.bufferedReader
-import kotlin.io.path.bufferedWriter
-import kotlin.io.path.outputStream
-import kotlin.io.path.pathString
+import kotlin.io.path.*
 
 class JavaSlicer {
     companion object {
@@ -41,12 +44,12 @@ class JavaSlicer {
     private val taintWrapperPath: String
 
     init {
-        val loggerFile = kotlin.io.path.createTempFile("slicer4-logger-", ".jar")
+        val loggerFile = createTempFile("slicer4-logger-", ".jar")
         val loggerJar = Slicer::class.java.getResourceAsStream("/DynamicSlicingLogger.jar")!!
         Files.copy(loggerJar, loggerFile, StandardCopyOption.REPLACE_EXISTING)
         loggerPath = loggerFile.toString()
 
-        val modelsDirectory = kotlin.io.path.createTempDirectory("slicer4-models-")
+        val modelsDirectory = createTempDirectory("slicer4-models-")
         val modelsZip = Slicer::class.java.getResourceAsStream("/models.zip")!!
         Utils.unzipAll(ZipInputStream(modelsZip), modelsDirectory)
         modelsPath = modelsDirectory.toString()
@@ -65,8 +68,9 @@ class JavaSlicer {
     ): Pair<RunProfileState, List<String>> {
         val state = env.state!!
         val processingDirectory: List<String>
-        val sootOutputDirectory = outputDirectory.resolve("instrumented")
+        val sootOutputDirectory = outputDirectory.resolve("soot-output")
         val instrumentationOptions = ""
+        sootOutputDirectory.toFile().mkdir()
         when (state) {
             is JarApplicationCommandLineState -> {
                 val params = state.javaParameters
@@ -104,6 +108,7 @@ class JavaSlicer {
 
             else -> throw ExecutionException("Unable to instrument this type of RunProfileState")
         }
+        decompileAll(env.project, sootOutputDirectory)
         return Pair(state, processingDirectory)
     }
 
@@ -141,6 +146,20 @@ class JavaSlicer {
 //            true, false, false, false
 //        )
         return ProgramSlice()
+    }
+
+    private fun decompileAll(project: Project, sootOutput: Path) {
+        val decompiler = IdeaDecompiler()
+        Files.walk(sootOutput).forEach { f ->
+            if (f.name.endsWith(".class")) {
+                val clazzVf = VfsUtil.findFile(f, true)!!
+                ApplicationManager.getApplication().invokeAndWait {
+                    IdeaDecompiler.LegalBurden().beforeFileOpened(FileEditorManager.getInstance(project), clazzVf)
+                }
+                f.resolveSibling(f.name.dropLast(".class".length) + "_decompiled.java")
+                    .write(decompiler.getText(clazzVf))
+            }
+        }
     }
 
     private fun saveTrace(trace: Trace, outputDirectory: Path) {

@@ -17,7 +17,7 @@ intellij {
     version.set("2022.2.3")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("java"))
+    plugins.set(listOf("java", "org.jetbrains.java.decompiler"))
 }
 
 dependencies {

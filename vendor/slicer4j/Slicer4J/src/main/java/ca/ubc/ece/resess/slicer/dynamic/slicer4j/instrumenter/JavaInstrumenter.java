@@ -244,7 +244,7 @@ public class JavaInstrumenter extends Instrumenter {
             this.isOriginal = true;
         }
 
-        initialize(jarPath, loggerJar);
+        initialize(Arrays.asList(jarPath, loggerJar), outDir);
         runMethodTransformationPack();
         Scene.v().loadNecessaryClasses();
         AnalysisLogger.log(true, "Running packs ... ");
