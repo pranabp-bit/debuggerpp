@@ -14,15 +14,15 @@ class DynamicSliceDebuggerExecutor : Executor() {
 
     override fun getToolWindowId(): String = ToolWindowId.RUN
 
-    override fun getToolWindowIcon(): Icon = AllIcons.Toolwindows.ToolWindowRun
+    override fun getToolWindowIcon(): Icon = AllIcons.Actions.Run_anything
 
-    override fun getIcon(): Icon = AllIcons.Actions.StartDebugger
+    override fun getIcon(): Icon = AllIcons.Actions.Run_anything
 
     override fun getDisabledIcon(): Icon = IconLoader.getDisabledIcon(icon)
 
     override fun getDescription(): String = "Debug selected configuration with dynamic slicing"
 
-    override fun getActionName(): String = "DynamicSliceDebugger"
+    override fun getActionName(): String = "Slicer4J"
 
     override fun getId(): String = ID
 

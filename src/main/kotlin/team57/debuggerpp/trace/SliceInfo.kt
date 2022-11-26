@@ -78,7 +78,7 @@ class SliceInfo: AnAction() {
         val sliceHighlightingColor = Color(77, 77, 77)
         attributes.setForegroundColor(sliceHighlightingColor)
 
-        var nonSliceLines = arrayOf(5, 6, 9, 10, 11)
+        var nonSliceLines = arrayOf(7, 8, 10, 11, 13, 15)
         for (line in nonSliceLines) {
             markupModel.addLineHighlighter(line - 1, SELECTION + 1, attributes)
         }

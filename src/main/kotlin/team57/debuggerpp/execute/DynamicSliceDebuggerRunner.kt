@@ -91,7 +91,7 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
                 override fun compute(indicator: ProgressIndicator): ProgramSlice {
                     val slicingCriteriaFile = "Main"
-                    val slicingCriteriaLineNo = 6
+                    val slicingCriteriaLineNo = 18
 
                     val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-outputs-")
                     val staticLog = outputDirectory.resolve("slicer4j-static.log")
