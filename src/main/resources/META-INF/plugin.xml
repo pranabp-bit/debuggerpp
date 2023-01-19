@@ -8,6 +8,13 @@
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.xdebugger</depends>
     <depends>org.jetbrains.java.decompiler</depends>
+
+    <projectListeners>
+        <listener class="team57.debuggerpp.listeners.DebuggerListener"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener">
+        </listener>
+    </projectListeners>
+
     <extensions defaultExtensionNs="com.intellij">
         <executor implementation="team57.debuggerpp.execute.DynamicSliceDebuggerExecutor"/>
         <programRunner implementation="team57.debuggerpp.execute.DynamicSliceDebuggerRunner"/>
