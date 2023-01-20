@@ -19,28 +19,4 @@
         <executor implementation="team57.debuggerpp.execute.DynamicSliceDebuggerExecutor"/>
         <programRunner implementation="team57.debuggerpp.execute.DynamicSliceDebuggerRunner"/>
     </extensions>
-    <actions>
-        <group>
-            <add-to-group group-id="XDebugger.ToolWindow.TopToolbar" anchor="last"/>
-            <separator/>
-            <action
-                    class="team57.debuggerpp.trace.SliceStepBackward"
-                    text="Slice Step Backward"
-                    icon="/icons/SliceStepBackward.svg"
-                    description="Step to previous slice line">
-            </action>
-            <action
-                    class="team57.debuggerpp.trace.SliceStepForward"
-                    text="Slice Step Forward"
-                    icon="/icons/SliceStepForward.svg"
-                    description="Step to next slice line">
-            </action>
-            <action
-                    class="team57.debuggerpp.trace.SliceInfo"
-                    text="Slice Information"
-                    icon="/icons/SliceInfo.svg"
-                    description="View program slice information">
-            </action>
-        </group>
-    </actions>
 </idea-plugin>
