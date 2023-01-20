@@ -4,23 +4,17 @@ import com.intellij.execution.ui.RunnerLayoutUi
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.markup.HighlighterLayer.SELECTION
-import com.intellij.openapi.editor.markup.MarkupModel
-import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.Project
 import com.intellij.ui.content.Content
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebuggerManager
-import java.awt.Color
-import java.awt.Font
-import javax.swing.*
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 
-class SliceInfo: AnAction() {
+class SliceInfo : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        grayOutNonSliceLines(e)
         createSlicerInfoView(e)
     }
 
@@ -65,24 +59,5 @@ class SliceInfo: AnAction() {
         controlDependencies.isCloseable = false
         graph.isCloseable = false
 //        Disposer.register(session.runContentDescriptor, view)
-    }
-
-    private fun grayOutNonSliceLines(event: AnActionEvent) {
-        // TO-DO: fix always select project file - right now it chooses the editor window that is selected
-        val editor: Editor = event.getRequiredData(CommonDataKeys.EDITOR)
-        val project: Project = event.getRequiredData(CommonDataKeys.PROJECT)
-        val document: Document = editor.getDocument()
-        val markupModel: MarkupModel = editor.getMarkupModel();
-
-        val attributes: TextAttributes = TextAttributes()
-        val sliceHighlightingColor = Color(77, 77, 77)
-        attributes.setForegroundColor(sliceHighlightingColor)
-
-        var nonSliceLines = arrayOf(7, 8, 10, 11, 13, 15)
-        for (line in nonSliceLines) {
-            markupModel.addLineHighlighter(line - 1, SELECTION + 1, attributes)
-        }
-
-//        markupModel.removeAllHighlighters()
     }
 }

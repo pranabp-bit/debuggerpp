@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import team57.debuggerpp.slicer.ProgramSlice;
 
 public class SliceJavaDebugProcess extends JavaDebugProcess {
-    private final ProgramSlice slice;
+    public final ProgramSlice slice;
     boolean slicing;
 
     protected SliceJavaDebugProcess(@NotNull XDebugSession session, @NotNull DebuggerSession javaSession, ProgramSlice slice) {

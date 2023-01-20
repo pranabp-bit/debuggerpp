@@ -3,37 +3,35 @@ package team57.debuggerpp.listeners
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.ui.RunnerLayoutUi
-import com.intellij.openapi.editor.markup.HighlighterLayer
-import com.intellij.openapi.editor.markup.MarkupModel
-import com.intellij.openapi.editor.markup.TextAttributes
-import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.util.Key
 import com.intellij.ui.content.Content
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebuggerManagerListener
-import com.intellij.xdebugger.XSourcePosition
-import java.awt.Color
+import team57.debuggerpp.trace.SliceJavaDebugProcess
+import team57.debuggerpp.ui.EditorSliceVisualizer
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-
-class DebuggerListener: XDebuggerManagerListener {
-
+class DebuggerListener : XDebuggerManagerListener {
     override fun processStarted(debugProcess: XDebugProcess) {
+        if (debugProcess !is SliceJavaDebugProcess) {
+            return
+        }
         val debugSession: XDebugSession = debugProcess.session
+        val sliceVisualizer = EditorSliceVisualizer(debugProcess.session.project, debugProcess.slice)
         debugProcess.processHandler.addProcessListener(object : ProcessListener {
             override fun startNotified(processEvent: ProcessEvent) {
                 initDebuggerUI(debugSession)
-                grayOutNonSliceLines(debugSession)
+                sliceVisualizer.start()
             }
 
             override fun processTerminated(processEvent: ProcessEvent) {}
             override fun processWillTerminate(processEvent: ProcessEvent, b: Boolean) {
-                removeLineGraying(debugSession)
+                sliceVisualizer.stop()
             }
+
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {}
         })
     }
@@ -73,42 +71,5 @@ class DebuggerListener: XDebuggerManagerListener {
         dataDependencies.isCloseable = false
         controlDependencies.isCloseable = false
         graph.isCloseable = false
-    }
-
-    private fun grayOutNonSliceLines(debugSession: XDebugSession) {
-
-//        val position: XSourcePosition? = debugSession.topFramePosition
-//
-//        if (position == null) {
-//            return
-//        }
-//
-//        val editor = FileEditorManager.getInstance(debugSession.project).getSelectedEditor(position.file)
-
-        val editor = FileEditorManager.getInstance(debugSession.project).getSelectedEditor()
-        if (editor is TextEditor) {
-            val markupModel: MarkupModel = editor.editor.markupModel
-
-            val attributes = TextAttributes()
-            val sliceHighlightingColor = Color(77, 77, 77)
-            attributes.foregroundColor = sliceHighlightingColor
-
-            var nonSliceLines = arrayOf(7, 8, 10, 11, 13, 15)
-            for (line in nonSliceLines) {
-                markupModel.addLineHighlighter(line - 1, HighlighterLayer.SELECTION + 1, attributes)
-            }
-//                markupModel.removeAllHighlighters()
-            return
-        }
-    }
-
-    private fun removeLineGraying(debugSession: XDebugSession) {
-        val position: XSourcePosition = debugSession.topFramePosition ?: return
-        val editor = FileEditorManager.getInstance(debugSession.project).getSelectedEditor(position.file)
-
-        if (editor is TextEditor) {
-            val markupModel: MarkupModel = editor.editor.markupModel
-            markupModel.removeAllHighlighters()
-        }
     }
 }
