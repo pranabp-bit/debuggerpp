@@ -15,7 +15,7 @@ public class StatementInstance {
     
     private Unit u;
     private SootMethod sm;
-    private int lineNo = -1;
+    private int lineNo = -1; // Index in the trace
     private StatementMap returnChunk;
     private long threadID = -1L;
     private long fieldId = -1L;
@@ -44,7 +44,11 @@ public class StatementInstance {
     public Unit getUnit() {
         return u;
     }
-    
+
+    /**
+     * Get the index in the trace
+     * @return index in the trace
+     */
     public int getLineNo() {
         return lineNo;
     }
