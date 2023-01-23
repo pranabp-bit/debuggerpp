@@ -19,4 +19,18 @@
         <executor implementation="team57.debuggerpp.execute.DynamicSliceDebuggerExecutor"/>
         <programRunner implementation="team57.debuggerpp.execute.DynamicSliceDebuggerRunner"/>
     </extensions>
+
+    <actions>
+        <group>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <separator/>
+            <action
+                    class="team57.debuggerpp.ui.SelectSlicingCriterionOption"
+                    text="Slice Step Backward"
+                    description="Select the line as the slicing criterion for Debugger++"
+                    icon="AllIcons.Actions.Run_anything">
+            </action>
+            <separator/>
+        </group>
+    </actions>
 </idea-plugin>
