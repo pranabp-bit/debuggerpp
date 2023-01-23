@@ -1,7 +1,7 @@
 package team57.debuggerpp.execute
 
 import com.intellij.execution.Executor
-import com.intellij.icons.AllIcons
+import com.intellij.execution.ExecutorRegistry
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.text.TextWithMnemonic
 import com.intellij.openapi.wm.ToolWindowId
@@ -10,7 +10,12 @@ import javax.swing.Icon
 
 class DynamicSliceDebuggerExecutor : Executor() {
     companion object {
-        const val ID = "DynamicSliceDebuggerExecutor"
+        const val EXECUTOR_ID = "DynamicSliceDebuggerExecutor"
+
+        val instance: Executor?
+            get() {
+                return ExecutorRegistry.getInstance().getExecutorById(EXECUTOR_ID)
+            }
     }
 
     override fun getToolWindowId(): String = ToolWindowId.RUN
@@ -25,7 +30,7 @@ class DynamicSliceDebuggerExecutor : Executor() {
 
     override fun getActionName(): String = "Debugger++"
 
-    override fun getId(): String = ID
+    override fun getId(): String = EXECUTOR_ID
 
     override fun getStartActionText(): String = "Debug with Dynamic Slicing using Debugger++"
 

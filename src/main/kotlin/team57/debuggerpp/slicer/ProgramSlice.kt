@@ -2,7 +2,7 @@ package team57.debuggerpp.slicer
 
 import ca.ubc.ece.resess.slicer.dynamic.core.slicer.DynamicSlice
 import com.intellij.openapi.diagnostic.Logger
-import java.util.*
+import team57.debuggerpp.util.SourceLocation
 
 class ProgramSlice(private val dynamicSlice: DynamicSlice) {
     companion object {
@@ -44,16 +44,6 @@ class ProgramSlice(private val dynamicSlice: DynamicSlice) {
             }
         }
         return@run map
-    }
-
-    class SourceLocation(val clazz: String, val lineNo: Int) {
-        override fun toString() = "$clazz:$lineNo"
-
-        override fun equals(other: Any?) = (other is SourceLocation)
-                && clazz == other.clazz
-                && lineNo == other.lineNo
-
-        override fun hashCode() = Objects.hash(clazz, lineNo)
     }
 
     class Dependencies(

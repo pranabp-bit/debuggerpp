@@ -19,6 +19,8 @@ import com.intellij.xdebugger.impl.XDebugSessionImpl
 import team57.debuggerpp.slicer.JavaSlicer
 import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.trace.SliceJavaDebugProcess
+import team57.debuggerpp.ui.SelectSlicingCriterionAction
+import team57.debuggerpp.util.SourceLocation
 import java.awt.Desktop
 import java.util.concurrent.atomic.AtomicReference
 
@@ -30,10 +32,12 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
     }
 
     private val slicer = JavaSlicer()
+    private var lastSlicingCriteria: SourceLocation? = null
 
     override fun getRunnerId() = ID
 
-    override fun canRun(executorId: String, profile: RunProfile) = executorId == DynamicSliceDebuggerExecutor.ID
+    override fun canRun(executorId: String, profile: RunProfile) =
+        executorId == DynamicSliceDebuggerExecutor.EXECUTOR_ID
 
     override fun createContentDescriptor(
         state: RunProfileState,
@@ -86,8 +90,9 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
         val task =
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
                 override fun compute(indicator: ProgressIndicator): ProgramSlice {
-                    val slicingCriteriaFile = "Main"
-                    val slicingCriteriaLineNo = 18
+                    val slicingCriteriaLocation = env.getUserData(SelectSlicingCriterionAction.SLICING_CRITERIA_KEY)
+                        ?: lastSlicingCriteria ?: throw IllegalStateException("No slicing criteria") // TODO
+                    lastSlicingCriteria = slicingCriteriaLocation
 
                     val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-outputs-")
                     val staticLog = outputDirectory.resolve("slicer4j-static.log")
@@ -106,11 +111,10 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
 
                     indicator.text = "Locating slicing criteria"
                     val slicingCriteria =
-                        slicer.locateSlicingCriteria(graph, slicingCriteriaFile, slicingCriteriaLineNo)
+                        slicer.locateSlicingCriteria(graph, slicingCriteriaLocation)
                     if (slicingCriteria.isEmpty()) {
                         throw ExecutionException(
-                            "Unable to locate $slicingCriteriaFile:$slicingCriteriaLineNo " +
-                                    "in the dynamic control flow graph"
+                            "Unable to locate $slicingCriteriaLocation in the dynamic control flow graph"
                         )
                     }
 
