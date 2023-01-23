@@ -5,6 +5,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.text.TextWithMnemonic
 import com.intellij.openapi.wm.ToolWindowId
+import team57.debuggerpp.ui.Icons
 import javax.swing.Icon
 
 class DynamicSliceDebuggerExecutor : Executor() {
@@ -14,22 +15,22 @@ class DynamicSliceDebuggerExecutor : Executor() {
 
     override fun getToolWindowId(): String = ToolWindowId.RUN
 
-    override fun getToolWindowIcon(): Icon = AllIcons.Actions.Run_anything
+    override fun getToolWindowIcon(): Icon = Icons.Logo
 
-    override fun getIcon(): Icon = AllIcons.Actions.Run_anything
+    override fun getIcon(): Icon = Icons.Logo
 
     override fun getDisabledIcon(): Icon = IconLoader.getDisabledIcon(icon)
 
-    override fun getDescription(): String = "Debug selected configuration with dynamic slicing"
+    override fun getDescription(): String = "Debug selected configuration with dynamic slicing using Debugger++"
 
-    override fun getActionName(): String = "Slicer4J"
+    override fun getActionName(): String = "Debugger++"
 
     override fun getId(): String = ID
 
-    override fun getStartActionText(): String = "Debug with Dynamic Slicing"
+    override fun getStartActionText(): String = "Debug with Dynamic Slicing using Debugger++"
 
     override fun getStartActionText(configurationName: String): String =
-        TextWithMnemonic.parse("Debug '%s' with Dynamic Slicing").replaceFirst("%s", configurationName).toString()
+        TextWithMnemonic.parse("Debug '%s' with Dynamic Slicing using Debugger++").replaceFirst("%s", configurationName).toString()
 
     override fun getContextActionId(): String = "DebugWithDynamicSlicing"
 

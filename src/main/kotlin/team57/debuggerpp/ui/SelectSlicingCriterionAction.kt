@@ -4,7 +4,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 
-class SelectSlicingCriterionOption: AnAction() {
+class SelectSlicingCriterionAction: AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         // Selects the line the cursor is currently on, regardless of any highlighting
         val editor = e.getData(CommonDataKeys.EDITOR)

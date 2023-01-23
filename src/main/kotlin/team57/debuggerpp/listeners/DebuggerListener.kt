@@ -38,7 +38,7 @@ class DebuggerListener : XDebuggerManagerListener {
 
     private fun initDebuggerUI(debugSession: XDebugSession) {
         val ui: RunnerLayoutUi = debugSession.ui
-        ui.defaults.initTabDefaults(1000, "Slicer4J", null)
+        ui.defaults.initTabDefaults(1000, "Slicer", null)
 
         // hard-coded data just for demo purposes
         val dataLabel = JLabel("<html>From: <br/> x: Main.java at 3<br/> y: Main.java at 4<br/><br/>To: <br/> z: Main.java at 12</html>",
