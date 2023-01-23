@@ -45,7 +45,7 @@ public class SliceJava extends SliceMethod{
             DynamicSlice newSlice = slice(si, variables);
             dynamicSlice = dynamicSlice.union(newSlice);
         }
-        return dynamicSlice;
+        return dynamicSlice.traceOrder();
     }
 
     @Override
