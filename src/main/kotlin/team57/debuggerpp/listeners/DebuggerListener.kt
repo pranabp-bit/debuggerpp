@@ -3,27 +3,48 @@ package team57.debuggerpp.listeners
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.ui.RunnerLayoutUi
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.Key
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiManager
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.content.Content
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugSession
+import com.intellij.xdebugger.XDebugSessionListener
 import com.intellij.xdebugger.XDebuggerManagerListener
+import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.trace.SliceJavaDebugProcess
 import team57.debuggerpp.ui.EditorSliceVisualizer
-import javax.swing.JLabel
+import team57.debuggerpp.ui.dependencies.ControlDependenciesPanel
+import team57.debuggerpp.ui.dependencies.DataDependenciesPanel
+import team57.debuggerpp.util.SourceLocation
+import javax.swing.JComponent
 import javax.swing.JPanel
-import javax.swing.SwingConstants
+
 
 class DebuggerListener : XDebuggerManagerListener {
     override fun processStarted(debugProcess: XDebugProcess) {
         if (debugProcess !is SliceJavaDebugProcess) {
             return
         }
-        val debugSession: XDebugSession = debugProcess.session
-        val sliceVisualizer = EditorSliceVisualizer(debugProcess.session.project, debugProcess.slice)
+        val session: XDebugSession = debugProcess.session
+        val project = session.project
+        val sliceVisualizer = EditorSliceVisualizer(project, debugProcess.slice)
+        val dataDepPanel = DataDependenciesPanel(project)
+        val controlDepPanel = ControlDependenciesPanel(project)
+
+        session.addSessionListener(object : XDebugSessionListener {
+            override fun sessionPaused() {
+                ApplicationManager.getApplication().invokeAndWait {
+                    updateDependenciesTabs(session, debugProcess.slice, dataDepPanel, controlDepPanel)
+                }
+            }
+        })
+
         debugProcess.processHandler.addProcessListener(object : ProcessListener {
             override fun startNotified(processEvent: ProcessEvent) {
-                initDebuggerUI(debugSession)
+                initDebuggerUI(session, dataDepPanel, controlDepPanel)
                 sliceVisualizer.start()
             }
 
@@ -36,34 +57,29 @@ class DebuggerListener : XDebuggerManagerListener {
         })
     }
 
-    private fun initDebuggerUI(debugSession: XDebugSession) {
+    private fun initDebuggerUI(
+        debugSession: XDebugSession,
+        dataDepComponent: JComponent,
+        controlDepComponent: JComponent
+    ) {
         val ui: RunnerLayoutUi = debugSession.ui
         ui.defaults.initTabDefaults(1000, "Slicer", null)
 
-        // hard-coded data just for demo purposes
-        val dataLabel = JLabel("<html>From: <br/> x: Main.java at 3<br/> y: Main.java at 4<br/><br/>To: <br/> z: Main.java at 12</html>",
-                SwingConstants.LEFT)
-        val controlLabel = JLabel("<html>From: <br/> x: Main.java at 7<br/><br/>To: <br/></html>",
-                SwingConstants.LEFT)
-        val dataPanel = JPanel()
-        val controlPanel = JPanel()
         val graphPanel = JPanel()
-        dataPanel.add(dataLabel)
-        controlPanel.add(controlLabel)
         val dataDependencies: Content = ui.createContent(
-                "SlicerContentId",
-                dataPanel,
-                "Data Dep.", null, null
+            "SlicerContentIdData",
+            dataDepComponent,
+            "Data DepA.", null, null
         )
         val controlDependencies: Content = ui.createContent(
-                "SlicerContentId",
-                controlPanel,
-                "Control Dep.", null, null
+            "SlicerContentIdControl",
+            controlDepComponent,
+            "Control Dep.", null, null
         )
         val graph: Content = ui.createContent(
-                "SlicerContentId",
-                graphPanel,
-                "Graph", null, null
+            "SlicerContentIdGraph",
+            graphPanel,
+            "Graph", null, null
         )
         ui.addContent(dataDependencies)
         ui.addContent(controlDependencies)
@@ -71,5 +87,26 @@ class DebuggerListener : XDebuggerManagerListener {
         dataDependencies.isCloseable = false
         controlDependencies.isCloseable = false
         graph.isCloseable = false
+    }
+
+    private fun updateDependenciesTabs(
+        session: XDebugSession, slice: ProgramSlice,
+        dataPanel: DataDependenciesPanel, controlPanel: ControlDependenciesPanel
+    ) {
+        // Get current position
+        val currentPosition = session.currentPosition ?: return
+        // Find class name
+        val file = PsiManager.getInstance(session.project).findFile(currentPosition.file)
+            ?: return
+        val element = file.findElementAt(currentPosition.offset)
+        val className = PsiTreeUtil.getParentOfType(element, PsiClass::class.java)?.qualifiedName
+        // Get dependencies
+        val location = className?.let { SourceLocation(it, currentPosition.line + 1) }
+        val dependencies = slice.dependencies[location]
+        val dataDependencies = dependencies?.data
+        val controlDependencies = dependencies?.control
+        // Update UI
+        dataPanel.updateDependencies(dataDependencies)
+        controlPanel.updateDependencies(controlDependencies)
     }
 }
