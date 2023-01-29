@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import guru.nidi.graphviz.attribute.*;
 import org.jgrapht.Graphs;
 
 import org.apache.commons.io.FileUtils;
@@ -26,13 +27,6 @@ import soot.toolkits.scalar.Pair;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
-import guru.nidi.graphviz.attribute.Attributes;
-import guru.nidi.graphviz.attribute.Font;
-import guru.nidi.graphviz.attribute.ForNodeLink;
-import guru.nidi.graphviz.attribute.Label;
-import guru.nidi.graphviz.attribute.LinkAttr;
-import guru.nidi.graphviz.attribute.Rank;
-import guru.nidi.graphviz.attribute.Style;
 import guru.nidi.graphviz.attribute.Rank.RankDir;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
@@ -42,6 +36,8 @@ import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.LinkSource;
 import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.model.Node;
+
+import static guru.nidi.graphviz.attribute.Color.TRANSPARENT;
 import static guru.nidi.graphviz.model.Factory.*;
 
 public class SlicePrinter {
@@ -66,6 +62,8 @@ public class SlicePrinter {
 
     public static void printDotGraph(String outDir, DynamicSlice dynamicSlice) {
         MutableGraph g = mutGraph("Dynamic Slice").setDirected(true);
+        MutableGraph m = mutGraph("Dynamic Slice").setDirected(true);
+        m.nodeAttrs().add(Color.WHITE).linkAttrs().add(Color.WHITE).graphAttrs().add(Color.WHITE);
         // Map<SootMethod, List<Node>> clusters = new LinkedHashMap<>();
         for(Pair<Pair<StatementInstance, AccessPath>, Pair<StatementInstance, AccessPath>> entry: dynamicSlice) {
             String edge = dynamicSlice.getEdges(entry.getO1().getO1().getLineNo(), entry.getO2().getO1().getLineNo());
@@ -92,12 +90,14 @@ public class SlicePrinter {
             Node newNode = node(sourceNode.getJavaSourceFile() + ":" + String.valueOf(sourceNode.getJavaSourceLineNo()) + ": " + sourceStr);
             if (sourceNode.equals(sliceNode)) {
                 g.add(newNode);
+                m.add(newNode.with(Color.WHITE.font()));
             } else {
-                g.add(newNode.link(
-                    to(node(String.valueOf(sliceNode.getJavaSourceFile() + ":" + sliceNode.getJavaSourceLineNo()) + ": " + destStr)).with(edgeStyle, Label.of(edgeStr))));
+                g.add(newNode.link(to(node(String.valueOf(sliceNode.getJavaSourceFile() + ":" + sliceNode.getJavaSourceLineNo()) + ": " + destStr))
+                                .with(edgeStyle, Label.of(edgeStr))));
+                m.add(newNode.with(Color.WHITE.font()).link(
+                    to(node(String.valueOf(sliceNode.getJavaSourceFile() + ":" + sliceNode.getJavaSourceLineNo()) + ": " + destStr))
+                            .with(edgeStyle, Color.WHITE.font(), Label.of(edgeStr))));
             }
-
-
 
             // List<Node> clusterNodes = new ArrayList<>();
             // if (clusters.containsKey(sourceNode.getMethod())) {
@@ -120,8 +120,10 @@ public class SlicePrinter {
         //     g.add(subG);
         // }
         try {
-            // Graphviz.fromGraph(g).render(Format.SVG).toFile(new File(outDir + File.separator + "slice-graph.svg"));
             Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("pdf")).toFile(new File(outDir + File.separator + "slice-graph.pdf"));
+            m.graphAttrs().add(TRANSPARENT.background());
+//            Graphviz.fromGraph(g).width(800).render(Format.PNG).toFile(new File(outDir + File.separator + "slice-graph.png"));
+            Graphviz.fromGraph(m).width(1200).render(Format.PNG).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"));
         } catch (IOException | GraphvizException e) {
             AnalysisLogger.warn(true, "Exception when writing slice graph file: {}", e.getMessage());
         }

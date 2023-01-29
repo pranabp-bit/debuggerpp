@@ -19,9 +19,13 @@ import team57.debuggerpp.ui.EditorSliceVisualizer
 import team57.debuggerpp.ui.dependencies.ControlDependenciesPanel
 import team57.debuggerpp.ui.dependencies.DataDependenciesPanel
 import team57.debuggerpp.util.SourceLocation
+import java.awt.image.BufferedImage
+import java.io.File
+import javax.imageio.ImageIO
+import javax.swing.ImageIcon
 import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JPanel
-
 
 class DebuggerListener : XDebuggerManagerListener {
     override fun processStarted(debugProcess: XDebugProcess) {
@@ -66,10 +70,13 @@ class DebuggerListener : XDebuggerManagerListener {
         ui.defaults.initTabDefaults(1000, "Slicer", null)
 
         val graphPanel = JPanel()
+        val depGraph: BufferedImage = ImageIO.read(File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"))
+        val graphLabel = JLabel(ImageIcon(depGraph))
+        graphPanel.add(graphLabel)
         val dataDependencies: Content = ui.createContent(
             "SlicerContentIdData",
             dataDepComponent,
-            "Data DepA.", null, null
+            "Data Dep.", null, null
         )
         val controlDependencies: Content = ui.createContent(
             "SlicerContentIdControl",
