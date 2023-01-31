@@ -37,25 +37,15 @@ public class SliceJavaDebugProcess extends JavaDebugProcess {
     }
 
     @Override
-    public void startStepOver(@Nullable XSuspendContext context) {
-//        getDebuggerSession().runToCursor(position, false);
-
-        final String fileUrl = "C:\\Users\\robin\\Documents\\CPEN 491\\test\\src\\Main.java"; //TODO: Change this dir
-
-//        addLineBreakpoint(getSession().getProject(), fileUrl, 21);
-
-        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(new File(fileUrl));
+    public void startStepInto(@Nullable XSuspendContext context) {
+        VirtualFile virtualFile = context.getActiveExecutionStack().getTopFrame().getSourcePosition().getFile();
 
         this.slice.getSliceLinesUnordered().forEach((a, b) -> {
             b.forEach(lineNumber -> {
-                XSourcePositionImpl position = XSourcePositionImpl.create(virtualFile, lineNumber);
-                XDebuggerUtil.getInstance().toggleLineBreakpoint(getSession().getProject(), virtualFile, lineNumber);
-                assert position != null;
-                getDebuggerSession().runToCursor(position, false);
+                XDebuggerUtil.getInstance().toggleLineBreakpoint(getSession().getProject(), virtualFile, lineNumber-1, true);
             });
-//
         });
-        super.startStepOver(context);
+        getDebuggerSession().resume();
     }
 
     private void addLineBreakpoint(final Project project, final String fileUrl, final int line) {
