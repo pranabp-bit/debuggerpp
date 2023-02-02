@@ -4,6 +4,7 @@ import ca.ubc.ece.resess.slicer.dynamic.core.slicer.DynamicSlice
 import com.intellij.openapi.diagnostic.Logger
 import team57.debuggerpp.util.SourceLocation
 import java.util.*
+import kotlin.collections.ArrayList
 
 class ProgramSlice(private val dynamicSlice: DynamicSlice) {
     companion object {
@@ -19,6 +20,10 @@ class ProgramSlice(private val dynamicSlice: DynamicSlice) {
 //            set.add(sliceNode.method.declaringClass.javaSourceStartLineNumber)
         }
         return@run map
+    }
+
+    val sliceLinesOrdered: java.util.ArrayList<Int>? = run {
+        return@run dynamicSlice.rawSlice as java.util.ArrayList<Int>?
     }
 
     val dependencies: Map<SourceLocation, Dependencies> = run {

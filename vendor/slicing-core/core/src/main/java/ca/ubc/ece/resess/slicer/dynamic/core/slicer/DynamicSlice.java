@@ -49,6 +49,14 @@ public class DynamicSlice
         // AnalysisLogger.log(true, "Called at {}", s);
     }
 
+    public List getRawSlice() {
+        List rawSlice = new ArrayList<>();
+        for (var i = 0; i < order.size(); i++) {
+            rawSlice.add(order.get(i).getO1().getJavaSourceLineNo());
+        }
+        return rawSlice;
+    }
+
     public boolean hasEdge(Integer src, Integer dst, String edgeType) {
         // AnalysisLogger.log(true, "Checking edge: {}-{}-{}", src, dst, edgeType);
         if (edgeTypes.contains(Triple.of(src, dst, edgeType))) {
