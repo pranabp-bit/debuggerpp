@@ -49,6 +49,7 @@ public class DynamicSlice
         // AnalysisLogger.log(true, "Called at {}", s);
     }
 
+    // FIXME: This doesn't work when there are multiple files
     public List getRawSlice() {
         List rawSlice = new ArrayList<>();
         for (var i = 0; i < order.size(); i++) {

@@ -23,6 +23,7 @@ class ProgramSlice(private val dynamicSlice: DynamicSlice) {
     }
 
     val sliceLinesOrdered: java.util.ArrayList<Int>? = run {
+        // FIXME: This doesn't work when there are multiple files
         return@run dynamicSlice.rawSlice as java.util.ArrayList<Int>?
     }
 

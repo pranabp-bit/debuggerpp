@@ -1,5 +1,10 @@
 package team57.debuggerpp.util
 
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiManager
+import com.intellij.psi.util.PsiTreeUtil
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
@@ -29,6 +34,12 @@ class Utils {
                     entry = zis.nextEntry
                 }
             }
+        }
+
+        @JvmStatic
+        fun findClassName(project: Project, file: VirtualFile, offset: Int): String? {
+            val element = PsiManager.getInstance(project).findFile(file)?.findElementAt(offset)
+            return PsiTreeUtil.getParentOfType(element, PsiClass::class.java)?.qualifiedName
         }
     }
 }

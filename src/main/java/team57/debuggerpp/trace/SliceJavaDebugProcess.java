@@ -1,7 +1,5 @@
 package team57.debuggerpp.trace;
 
-import com.intellij.debugger.DebuggerManager;
-import com.intellij.debugger.engine.DebuggerManagerThreadImpl;
 import com.intellij.debugger.engine.JavaDebugProcess;
 import com.intellij.debugger.impl.DebuggerSession;
 import com.intellij.idea.ActionsBundle;
@@ -12,10 +10,14 @@ import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.frame.XSuspendContext;
+import com.intellij.xdebugger.impl.XSourcePositionImpl;
 import com.intellij.xdebugger.impl.actions.XDebuggerActions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import team57.debuggerpp.slicer.ProgramSlice;
+import team57.debuggerpp.util.Utils;
+
+import java.util.Set;
 
 public class SliceJavaDebugProcess extends JavaDebugProcess {
     public final ProgramSlice slice;
@@ -45,7 +47,7 @@ public class SliceJavaDebugProcess extends JavaDebugProcess {
             if (i < sliceLineIndex) {
                 continue;
             }
-            if (rawSlice.get(i) -1 == line ) {
+            if (rawSlice.get(i) - 1 == line) {
                 sliceLineIndex++;
             } else if (sliceLineIndex == i) {
                 var newSourcePosition = XDebuggerUtil.getInstance().createPosition(virtualFile, rawSlice.get(i) - 1);
@@ -57,28 +59,19 @@ public class SliceJavaDebugProcess extends JavaDebugProcess {
 
     }
 
-    // TODO: FIX RUNTOPOSITION HANDLER USING ORDERED SLICE LINES
-    int currentPosition = 0; // TODO: update this to initial breakpoint position
     @Override
     public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-        XSourcePosition sourcePosition = context.getActiveExecutionStack().getTopFrame().getSourcePosition();
-        VirtualFile virtualFile = sourcePosition.getFile();
-        currentPosition = sourcePosition.getLine();
-        var rawSlice = this.slice.getSliceLinesOrdered();
-
-        int realLinePosition = position.getLine() + 1;
-        XSourcePosition myPosition = position;
-        if(rawSlice.contains(realLinePosition)) {
-            currentPosition = myPosition.getLine();
-            myPosition = XDebuggerUtil.getInstance().createPosition(virtualFile, realLinePosition-1);
-            super.runToPosition(myPosition, context);
+        if (context == null) {
+            return;
         }
-        else{
-            Messages.showErrorDialog("The line you selected is out of the slice, please try again!", UIUtil.removeMnemonic(ActionsBundle.actionText(XDebuggerActions.RUN_TO_CURSOR)));
-            getDebuggerSession().pause();
-            getDebuggerSession().resume();
-//            myPosition = XDebuggerUtil.getInstance().createPosition(virtualFile, currentPosition);
-//            super.runToPosition(myPosition, context);
+        String clazz = Utils.findClassName(getSession().getProject(), position.getFile(), position.getOffset());
+        Set<Integer> lines = slice.getSliceLinesUnordered().get(clazz);
+        if (lines != null && lines.contains(position.getLine() + 1)) {
+            super.runToPosition(XSourcePositionImpl.create(position.getFile(), position.getLine()), context);
+        } else {
+            Messages.showErrorDialog("The line you selected is out of the slice, please try again!",
+                    UIUtil.removeMnemonic(ActionsBundle.actionText(XDebuggerActions.RUN_TO_CURSOR)));
+            getSession().positionReached(context);
         }
     }
 }
