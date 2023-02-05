@@ -121,6 +121,7 @@ public class SlicePrinter {
         // }
         try {
             Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("pdf")).toFile(new File(outDir + File.separator + "slice-graph.pdf"));
+            Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("dot")).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.dot"));
             m.graphAttrs().add(TRANSPARENT.background());
 //            Graphviz.fromGraph(g).width(800).render(Format.PNG).toFile(new File(outDir + File.separator + "slice-graph.png"));
             Graphviz.fromGraph(m).width(1200).render(Format.PNG).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"));

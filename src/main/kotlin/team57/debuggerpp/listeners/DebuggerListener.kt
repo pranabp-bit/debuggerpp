@@ -15,17 +15,17 @@ import com.intellij.xdebugger.XDebugSessionListener
 import com.intellij.xdebugger.XDebuggerManagerListener
 import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.trace.SliceJavaDebugProcess
+//import team57.debuggerpp.trace.SubGraphBuilder
 import team57.debuggerpp.ui.EditorSliceVisualizer
 import team57.debuggerpp.ui.dependencies.ControlDependenciesPanel
 import team57.debuggerpp.ui.dependencies.DataDependenciesPanel
 import team57.debuggerpp.util.SourceLocation
+import java.awt.Dimension
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
-import javax.swing.ImageIcon
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
+import javax.swing.*
+
 
 class DebuggerListener : XDebuggerManagerListener {
     override fun processStarted(debugProcess: XDebugProcess) {
@@ -70,6 +70,8 @@ class DebuggerListener : XDebuggerManagerListener {
         ui.defaults.initTabDefaults(1000, "Slicer", null)
 
         val graphPanel = JPanel()
+        val scrollPane = JScrollPane(graphPanel)
+        scrollPane.preferredSize = Dimension(200, 200)
         val depGraph: BufferedImage = ImageIO.read(File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"))
         val graphLabel = JLabel(ImageIcon(depGraph))
         graphPanel.add(graphLabel)
@@ -85,7 +87,7 @@ class DebuggerListener : XDebuggerManagerListener {
         )
         val graph: Content = ui.createContent(
             "SlicerContentIdGraph",
-            graphPanel,
+                scrollPane,
             "Graph", null, null
         )
         ui.addContent(dataDependencies)
@@ -94,6 +96,11 @@ class DebuggerListener : XDebuggerManagerListener {
         dataDependencies.isCloseable = false
         controlDependencies.isCloseable = false
         graph.isCloseable = false
+
+//        println("subgraph")
+//        val subGraph: SubGraphBuilder = SubGraphBuilder()
+//        subGraph.generateSubGraph()
+//        println("subgraph done")
     }
 
     private fun updateDependenciesTabs(
