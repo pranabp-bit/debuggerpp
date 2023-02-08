@@ -6,6 +6,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiIfStatement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.parents
 import com.intellij.refactoring.suggested.endOffset
@@ -25,6 +26,8 @@ class ProgramSlice(private val project: Project, private val dynamicSlice: Dynam
         val searchScope = GlobalSearchScope.allScope(project)
         val psiFacade = JavaPsiFacade.getInstance(project)
         for (sliceNode in dynamicSlice.map { x -> x.o1.o1 }) {
+            if (sliceNode.javaSourceLineNo < 0)
+                continue
             val set = map.getOrPut(sliceNode.javaSourceFile) { HashSet() }
             val line = sliceNode.javaSourceLineNo - 1
             val clazz = psiFacade.findClass(sliceNode.javaSourceFile, searchScope)
@@ -35,8 +38,10 @@ class ProgramSlice(private val project: Project, private val dynamicSlice: Dynam
                 val element = file.findElementAt(lineOffset)
                 element?.parents(false)
                     ?.forEach {
-                        set.add(document.getLineNumber(it.startOffset))
-                        set.add(document.getLineNumber(it.endOffset))
+                        if (it !is PsiIfStatement) {
+                            set.add(document.getLineNumber(it.startOffset))
+                            set.add(document.getLineNumber(it.endOffset))
+                        }
                     }
             }
             set.add(line)
