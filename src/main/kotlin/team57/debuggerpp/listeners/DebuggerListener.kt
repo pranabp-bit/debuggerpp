@@ -8,13 +8,14 @@ import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.ui.components.JBTabbedPane
 import com.intellij.ui.content.Content
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
 import com.intellij.xdebugger.XDebuggerManagerListener
 import team57.debuggerpp.slicer.ProgramSlice
-import team57.debuggerpp.trace.SliceJavaDebugProcess
+import team57.debuggerpp.stepping.DppJavaDebugProcess
 import team57.debuggerpp.ui.EditorSliceVisualizer
 import team57.debuggerpp.ui.Icons
 import team57.debuggerpp.ui.dependencies.ControlDependenciesPanel
@@ -26,7 +27,7 @@ import javax.swing.*
 
 class DebuggerListener : XDebuggerManagerListener {
     override fun processStarted(debugProcess: XDebugProcess) {
-        if (debugProcess !is SliceJavaDebugProcess) {
+        if (debugProcess !is DppJavaDebugProcess) {
             return
         }
         val session: XDebugSession = debugProcess.session
@@ -67,7 +68,7 @@ class DebuggerListener : XDebuggerManagerListener {
     ) {
         val ui: RunnerLayoutUi = debugSession.ui
 
-        val sliceInfoComponent = JTabbedPane();
+        val sliceInfoComponent = JBTabbedPane()
         val sliceInfoTab: Content = ui.createContent(
                 "sliceInfoTab",
                 sliceInfoComponent,

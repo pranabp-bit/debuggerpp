@@ -1,6 +1,6 @@
 package team57.debuggerpp.ui.dependencies
 
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
@@ -49,12 +49,10 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
     protected fun addDependencyLine(prefix: String, dependency: ProgramSlice.Dependency) {
         val l = JButton()
         val searchScope = GlobalSearchScope.allScope(project)
-        var clazz: PsiClass? = null
         var displayName = dependency.location.clazz
         var lineText = ""
-
-        ApplicationManager.getApplication().invokeAndWait {
-            clazz = JavaPsiFacade.getInstance(project).findClass(dependency.location.clazz, searchScope)
+        val clazz = ReadAction.compute<PsiClass?, Throwable> {
+            JavaPsiFacade.getInstance(project).findClass(dependency.location.clazz, searchScope)
         }
 
         clazz?.containingFile?.let { file ->

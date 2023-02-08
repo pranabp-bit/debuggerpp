@@ -162,6 +162,7 @@ class JavaSlicer {
     }
 
     fun slice(
+        project: Project,
         icdg: DynamicControlFlowGraph,
         slicingCriteria: List<StatementInstance>,
         processDirs: List<String>,
@@ -172,7 +173,7 @@ class JavaSlicer {
             slicingCriteria.map { s -> s.lineNo }, stubDroidPath, taintWrapperPath,
             null, null, true, false
         )
-        return ProgramSlice(slice)
+        return ProgramSlice(project, slice)
     }
 
     private fun decompileAll(project: Project, sootOutput: Path) {

@@ -18,7 +18,7 @@ import com.intellij.xdebugger.*
 import com.intellij.xdebugger.impl.XDebugSessionImpl
 import team57.debuggerpp.slicer.JavaSlicer
 import team57.debuggerpp.slicer.ProgramSlice
-import team57.debuggerpp.trace.SliceJavaDebugProcess
+import team57.debuggerpp.stepping.DppJavaDebugProcess
 import team57.debuggerpp.ui.SelectSlicingCriterionAction
 import team57.debuggerpp.util.SourceLocation
 import java.awt.Desktop
@@ -73,7 +73,7 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
                                 sessionImpl.addRestartActions(*executionResult.restartActions)
                             }
                             val slice = env.getUserData(SLICE_KEY)
-                            return SliceJavaDebugProcess.create(session, debuggerSession, slice)
+                            return DppJavaDebugProcess.create(session, debuggerSession, slice)
                         }
                     })
                 result.set(session.runContentDescriptor)
@@ -119,7 +119,7 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
                     }
 
                     indicator.text = "Slicing"
-                    return slicer.slice(graph, slicingCriteria, processDirs, outputDirectory)
+                    return slicer.slice(project, graph, slicingCriteria, processDirs, outputDirectory)
                 }
             }
         task.queue() // This runs synchronously for modal tasks

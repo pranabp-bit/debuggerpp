@@ -90,11 +90,11 @@ class EditorSliceVisualizer(private val project: Project, private val slice: Pro
             }
         }
 
-        for (line in 1..textEditor.editor.document.lineCount) {
+        for (line in 0 until textEditor.editor.document.lineCount) {
             if (sliceLines.contains(line))
                 continue
             textEditor.editor.markupModel.addLineHighlighter(
-                line - 1,
+                line,
                 HighlighterLayer.SELECTION + 1,
                 greyOutAttributes
             )

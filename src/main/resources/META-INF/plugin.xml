@@ -18,6 +18,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <executor implementation="team57.debuggerpp.execute.DynamicSliceDebuggerExecutor"/>
         <programRunner implementation="team57.debuggerpp.execute.DynamicSliceDebuggerRunner"/>
+        <debugger.jvmSteppingCommandProvider implementation="team57.debuggerpp.stepping.DppJvmSteppingCommandProvider"/>
     </extensions>
 
     <actions>
@@ -26,7 +27,7 @@
             <separator/>
             <action
                     class="team57.debuggerpp.ui.SelectSlicingCriterionAction"
-                    text="Select line as slicing criterion"
+                    text="Select Line as Slicing Criterion"
                     description="Select the line as the slicing criterion for Debugger++"
                     icon="team57.debuggerpp.ui.Icons.Logo">
             </action>

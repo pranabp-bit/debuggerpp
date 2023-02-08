@@ -1,30 +1,47 @@
 package team57.debuggerpp.slicer
 
 import ca.ubc.ece.resess.slicer.dynamic.core.slicer.DynamicSlice
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.parents
+import com.intellij.refactoring.suggested.endOffset
+import com.intellij.refactoring.suggested.startOffset
 import team57.debuggerpp.util.SourceLocation
 import java.util.*
-import kotlin.collections.ArrayList
 
-class ProgramSlice(private val dynamicSlice: DynamicSlice) {
+
+class ProgramSlice(private val project: Project, private val dynamicSlice: DynamicSlice) {
     companion object {
         private val LOG = Logger.getInstance(ProgramSlice::class.java)
     }
 
-    val sliceLinesUnordered: Map<String, Set<Int>> = run {
+    val sliceLinesUnordered: Map<String, Set<Int>> = ReadAction.compute<Map<String, Set<Int>>, Throwable> {
         val map = HashMap<String, MutableSet<Int>>()
+        val documentManager = PsiDocumentManager.getInstance(project)
+        val searchScope = GlobalSearchScope.allScope(project)
+        val psiFacade = JavaPsiFacade.getInstance(project)
         for (sliceNode in dynamicSlice.map { x -> x.o1.o1 }) {
             val set = map.getOrPut(sliceNode.javaSourceFile) { HashSet() }
-            set.add(sliceNode.javaSourceLineNo)
-            set.add(sliceNode.method.javaSourceStartLineNumber)
-//            set.add(sliceNode.method.declaringClass.javaSourceStartLineNumber)
+            val line = sliceNode.javaSourceLineNo - 1
+            val clazz = psiFacade.findClass(sliceNode.javaSourceFile, searchScope)
+            val file = clazz?.containingFile
+            val document = file?.let { documentManager.getDocument(file) }
+            if (document != null) {
+                val lineOffset = (document.getLineStartOffset(line) + document.getLineEndOffset(line)) / 2
+                val element = file.findElementAt(lineOffset)
+                element?.parents(false)
+                    ?.forEach {
+                        set.add(document.getLineNumber(it.startOffset))
+                        set.add(document.getLineNumber(it.endOffset))
+                    }
+            }
+            set.add(line)
         }
-        return@run map
-    }
-
-    val sliceLinesOrdered: java.util.ArrayList<Int>? = run {
-        // FIXME: This doesn't work when there are multiple files
-        return@run dynamicSlice.rawSlice as java.util.ArrayList<Int>?
+        return@compute map
     }
 
     val dependencies: Map<SourceLocation, Dependencies> = run {
