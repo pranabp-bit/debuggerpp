@@ -42,7 +42,7 @@ public class DppRequestHint extends RequestHint {
                         String clazz = Utils.findClassName(file, position.getOffset());
                         Set<Integer> lines = slice.getSliceLinesUnordered().get(clazz);
                         if (lines == null || !lines.contains(position.getLine())) {
-                            return getDepth(); // Repeat the StepRequest
+                            return StepRequest.STEP_OVER; // Step until a slice line is reached
                         }
                     }
                 }

@@ -10,6 +10,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.fileEditor.ex.FileEditorWithProvider
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
@@ -82,6 +83,11 @@ class EditorSliceVisualizer(private val project: Project, private val slice: Pro
         val file = psiManager.findFile(textEditor.file)
         if (file !is PsiJavaFile)
             return
+
+        val fileIndex = ProjectRootManager.getInstance(file.project).fileIndex
+        if (!fileIndex.isInContent(file.virtualFile)) {
+            return
+        }
 
         val sliceLines = HashSet<Int>()
         for (clazz in file.classes) {
