@@ -15,15 +15,12 @@ import com.intellij.xdebugger.XDebugSessionListener
 import com.intellij.xdebugger.XDebuggerManagerListener
 import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.trace.SliceJavaDebugProcess
-//import team57.debuggerpp.trace.SubGraphBuilder
 import team57.debuggerpp.ui.EditorSliceVisualizer
+import team57.debuggerpp.ui.Icons
 import team57.debuggerpp.ui.dependencies.ControlDependenciesPanel
 import team57.debuggerpp.ui.dependencies.DataDependenciesPanel
+import team57.debuggerpp.ui.dependencies.GraphPanel
 import team57.debuggerpp.util.SourceLocation
-import java.awt.Dimension
-import java.awt.image.BufferedImage
-import java.io.File
-import javax.imageio.ImageIO
 import javax.swing.*
 
 
@@ -37,6 +34,7 @@ class DebuggerListener : XDebuggerManagerListener {
         val sliceVisualizer = EditorSliceVisualizer(project, debugProcess.slice)
         val dataDepPanel = DataDependenciesPanel(project)
         val controlDepPanel = ControlDependenciesPanel(project)
+        val graphPanel = GraphPanel()
 
         session.addSessionListener(object : XDebugSessionListener {
             override fun sessionPaused() {
@@ -48,7 +46,7 @@ class DebuggerListener : XDebuggerManagerListener {
 
         debugProcess.processHandler.addProcessListener(object : ProcessListener {
             override fun startNotified(processEvent: ProcessEvent) {
-                initDebuggerUI(session, dataDepPanel, controlDepPanel)
+                initDebuggerUI(session, dataDepPanel, controlDepPanel, graphPanel)
                 sliceVisualizer.start()
             }
 
@@ -64,43 +62,25 @@ class DebuggerListener : XDebuggerManagerListener {
     private fun initDebuggerUI(
         debugSession: XDebugSession,
         dataDepComponent: JComponent,
-        controlDepComponent: JComponent
+        controlDepComponent: JComponent,
+        graphComponent: JComponent
     ) {
         val ui: RunnerLayoutUi = debugSession.ui
-        ui.defaults.initTabDefaults(1000, "Slicer", null)
 
-        val graphPanel = JPanel()
-        val scrollPane = JScrollPane(graphPanel)
-        scrollPane.preferredSize = Dimension(200, 200)
-        val depGraph: BufferedImage = ImageIO.read(File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"))
-        val graphLabel = JLabel(ImageIcon(depGraph))
-        graphPanel.add(graphLabel)
-        val dataDependencies: Content = ui.createContent(
-            "SlicerContentIdData",
-            dataDepComponent,
-            "Data Dep.", null, null
+        val sliceInfoComponent = JTabbedPane();
+        val sliceInfoTab: Content = ui.createContent(
+                "sliceInfoTab",
+                sliceInfoComponent,
+                "Slicer4J",
+                Icons.Logo,
+                null
         )
-        val controlDependencies: Content = ui.createContent(
-            "SlicerContentIdControl",
-            controlDepComponent,
-            "Control Dep.", null, null
-        )
-        val graph: Content = ui.createContent(
-            "SlicerContentIdGraph",
-                scrollPane,
-            "Graph", null, null
-        )
-        ui.addContent(dataDependencies)
-        ui.addContent(controlDependencies)
-        ui.addContent(graph)
-        dataDependencies.isCloseable = false
-        controlDependencies.isCloseable = false
-        graph.isCloseable = false
 
-//        println("subgraph")
-//        val subGraph: SubGraphBuilder = SubGraphBuilder()
-//        subGraph.generateSubGraph()
-//        println("subgraph done")
+        sliceInfoComponent.addTab("Data Dep", dataDepComponent)
+        sliceInfoComponent.addTab("Control Dep", controlDepComponent)
+        sliceInfoComponent.addTab("Graph", graphComponent)
+        ui.addContent(sliceInfoTab)
+        sliceInfoTab.isCloseable = false
     }
 
     private fun updateDependenciesTabs(
