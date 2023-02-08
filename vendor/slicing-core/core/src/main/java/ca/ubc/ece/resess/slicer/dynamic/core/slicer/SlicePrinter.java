@@ -62,8 +62,6 @@ public class SlicePrinter {
 
     public static void printDotGraph(String outDir, DynamicSlice dynamicSlice) {
         MutableGraph g = mutGraph("Dynamic Slice").setDirected(true);
-        MutableGraph m = mutGraph("Dynamic Slice").setDirected(true);
-        m.nodeAttrs().add(Color.WHITE).linkAttrs().add(Color.WHITE).graphAttrs().add(Color.WHITE);
         // Map<SootMethod, List<Node>> clusters = new LinkedHashMap<>();
         for(Pair<Pair<StatementInstance, AccessPath>, Pair<StatementInstance, AccessPath>> entry: dynamicSlice) {
             String edge = dynamicSlice.getEdges(entry.getO1().getO1().getLineNo(), entry.getO2().getO1().getLineNo());
@@ -90,13 +88,9 @@ public class SlicePrinter {
             Node newNode = node(sourceNode.getJavaSourceFile() + ":" + String.valueOf(sourceNode.getJavaSourceLineNo()) + ": " + sourceStr);
             if (sourceNode.equals(sliceNode)) {
                 g.add(newNode);
-                m.add(newNode.with(Color.WHITE.font()));
             } else {
                 g.add(newNode.link(to(node(String.valueOf(sliceNode.getJavaSourceFile() + ":" + sliceNode.getJavaSourceLineNo()) + ": " + destStr))
                                 .with(edgeStyle, Label.of(edgeStr))));
-                m.add(newNode.with(Color.WHITE.font()).link(
-                    to(node(String.valueOf(sliceNode.getJavaSourceFile() + ":" + sliceNode.getJavaSourceLineNo()) + ": " + destStr))
-                            .with(edgeStyle, Color.WHITE.font(), Label.of(edgeStr))));
             }
 
             // List<Node> clusterNodes = new ArrayList<>();
@@ -122,9 +116,10 @@ public class SlicePrinter {
         try {
             Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("pdf")).toFile(new File(outDir + File.separator + "slice-graph.pdf"));
             Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("dot")).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.dot"));
-            m.graphAttrs().add(TRANSPARENT.background());
-//            Graphviz.fromGraph(g).width(800).render(Format.PNG).toFile(new File(outDir + File.separator + "slice-graph.png"));
-            Graphviz.fromGraph(m).width(1200).render(Format.PNG).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"));
+            g.nodeAttrs().add(Color.WHITE).linkAttrs().add(Color.WHITE).graphAttrs().add(Color.WHITE);
+            g.nodeAttrs().add(Color.WHITE.font()).linkAttrs().add(Color.WHITE.font());
+            g.graphAttrs().add(TRANSPARENT.background());
+            Graphviz.fromGraph(g).width(1200).render(Format.PNG).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"));
         } catch (IOException | GraphvizException e) {
             AnalysisLogger.warn(true, "Exception when writing slice graph file: {}", e.getMessage());
         }
