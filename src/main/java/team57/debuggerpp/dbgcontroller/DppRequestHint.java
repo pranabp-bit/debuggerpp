@@ -1,4 +1,4 @@
-package team57.debuggerpp.stepping;
+package team57.debuggerpp.dbgcontroller;
 
 import com.intellij.debugger.SourcePosition;
 import com.intellij.debugger.engine.JavaDebugProcess;

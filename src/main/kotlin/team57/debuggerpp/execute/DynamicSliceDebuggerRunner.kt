@@ -18,16 +18,12 @@ import com.intellij.xdebugger.*
 import com.intellij.xdebugger.impl.XDebugSessionImpl
 import team57.debuggerpp.slicer.JavaSlicer
 import team57.debuggerpp.slicer.ProgramSlice
-import team57.debuggerpp.stepping.DppJavaDebugProcess
+import team57.debuggerpp.dbgcontroller.DppJavaDebugProcess
 import team57.debuggerpp.ui.SelectSlicingCriterionAction
 import team57.debuggerpp.util.SourceLocation
 import java.awt.Desktop
-import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.io.path.Path
 
 class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
     companion object {
@@ -96,13 +92,13 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
                 override fun compute(indicator: ProgressIndicator): ProgramSlice {
                     val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-outputs-")
-                    val currentProgramSlice = getProgramSlice(indicator, outputDirectory);
+                    val currentProgramSlice = getProgramSlice(indicator, outputDirectory)
 
                     // *** for temp test used only ***
 //                    val testOutputDirectory = Files.createDirectories(Paths.get("C:\\Users\\robin\\Documents\\CPEN 491\\debuggerpp\\src\\test\\kotlin\\team57\\debuggerpp\\execute\\generatedFile"));
 //                    getProgramSlice(indicator, testOutputDirectory);
 
-                    return currentProgramSlice;
+                    return currentProgramSlice
                 }
 
                 private fun getProgramSlice(indicator: ProgressIndicator, outputDirectory: Path): ProgramSlice {

@@ -15,7 +15,7 @@ import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
 import com.intellij.xdebugger.XDebuggerManagerListener
 import team57.debuggerpp.slicer.ProgramSlice
-import team57.debuggerpp.stepping.DppJavaDebugProcess
+import team57.debuggerpp.dbgcontroller.DppJavaDebugProcess
 import team57.debuggerpp.ui.EditorSliceVisualizer
 import team57.debuggerpp.ui.Icons
 import team57.debuggerpp.ui.dependencies.ControlDependenciesPanel

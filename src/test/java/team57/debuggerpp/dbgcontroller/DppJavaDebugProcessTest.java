@@ -1,11 +1,5 @@
-package team57.debuggerpp.stepping;
+package team57.debuggerpp.dbgcontroller;
 
-import com.intellij.debugger.SourcePosition;
-import com.intellij.openapi.roots.FileIndex;
-import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.psi.PsiFile;
-import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
@@ -13,10 +7,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

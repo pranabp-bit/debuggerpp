@@ -18,7 +18,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <executor implementation="team57.debuggerpp.execute.DynamicSliceDebuggerExecutor"/>
         <programRunner implementation="team57.debuggerpp.execute.DynamicSliceDebuggerRunner"/>
-        <debugger.jvmSteppingCommandProvider implementation="team57.debuggerpp.stepping.DppJvmSteppingCommandProvider"/>
+        <debugger.jvmSteppingCommandProvider implementation="team57.debuggerpp.dbgcontroller.DppJvmSteppingCommandProvider"/>
     </extensions>
 
     <actions>
