@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.7.20"
-    id("org.jetbrains.intellij") version "1.9.0"
+    id("org.jetbrains.intellij") version "1.13.0"
 }
 
 group = "team57"
@@ -22,6 +22,10 @@ intellij {
 
 dependencies {
     implementation(project(":vendor:slicer4j:Slicer4J", "default"))
+    implementation("org.testng:testng:7.1.0")
+
+
+
 }
 
 tasks {
