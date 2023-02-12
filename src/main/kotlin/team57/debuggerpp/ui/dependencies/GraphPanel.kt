@@ -23,7 +23,9 @@ class GraphPanel: JScrollPane(){
 
     fun updateGraph(currentLineNum: Int) {
         val depGraph: BufferedImage = getGraph(currentLineNum)
-        val graphLabel = JLabel(ImageIcon(depGraph))
+        val graphImage = ImageIcon(depGraph).image
+        val scaledImage = graphImage.getScaledInstance(graphImage.getWidth(null) / 2, graphImage.getHeight(null)/2, java.awt.Image.SCALE_SMOOTH)
+        val graphLabel = JLabel(ImageIcon(scaledImage))
         panel.removeAll()
         panel.add(graphLabel)
         updateUI()
