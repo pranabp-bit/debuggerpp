@@ -40,7 +40,7 @@ class DebuggerListener : XDebuggerManagerListener {
         session.addSessionListener(object : XDebugSessionListener {
             override fun sessionPaused() {
                 ApplicationManager.getApplication().invokeAndWait {
-                    updateDependenciesTabs(session, debugProcess.slice, dataDepPanel, controlDepPanel)
+                    updateDependenciesTabs(session, debugProcess.slice, dataDepPanel, controlDepPanel, graphPanel)
                 }
             }
         })
@@ -86,10 +86,12 @@ class DebuggerListener : XDebuggerManagerListener {
 
     private fun updateDependenciesTabs(
         session: XDebugSession, slice: ProgramSlice,
-        dataPanel: DataDependenciesPanel, controlPanel: ControlDependenciesPanel
+        dataPanel: DataDependenciesPanel, controlPanel: ControlDependenciesPanel,
+        graphPanel: GraphPanel
     ) {
         // Get current position
         val currentPosition = session.currentPosition ?: return
+        val currentLineNum: Int = currentPosition.line + 1
         // Find class name
         val file = PsiManager.getInstance(session.project).findFile(currentPosition.file)
             ?: return
@@ -103,5 +105,6 @@ class DebuggerListener : XDebuggerManagerListener {
         // Update UI
         dataPanel.updateDependencies(dataDependencies)
         controlPanel.updateDependencies(controlDependencies)
+        graphPanel.updateGraph(currentLineNum)
     }
 }

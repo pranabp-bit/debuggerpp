@@ -55,6 +55,7 @@ public class SlicePrinter {
         }
         try {
             FileUtils.writeLines(new File(fileName), printList);
+            FileUtils.writeLines(new File(System.getProperty("java.io.tmpdir") + "slice.log"), printList);
         } catch (IOException e) {
             AnalysisLogger.warn(true, "Exception when writing slice: {}", e);
         }
