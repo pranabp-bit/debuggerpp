@@ -95,7 +95,7 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
                     val currentProgramSlice = getProgramSlice(indicator, outputDirectory)
 
                     // *** for temp test used only ***
-//                    val testOutputDirectory = Files.createDirectories(Paths.get("C:\\Users\\robin\\Documents\\CPEN 491\\debuggerpp\\src\\test\\kotlin\\team57\\debuggerpp\\execute\\generatedFile"));
+//                    val testOutputDirectory = Files.createDirectories(Paths.get("src\\test\\kotlin\\team57\\debuggerpp\\execute\\generatedFile"));
 //                    getProgramSlice(indicator, testOutputDirectory);
 
                     return currentProgramSlice
