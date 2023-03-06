@@ -72,7 +72,7 @@ class DebuggerListener : XDebuggerManagerListener {
         val sliceInfoTab: Content = ui.createContent(
                 "sliceInfoTab",
                 sliceInfoComponent,
-                "Slicer4J",
+                "Debugger++",
                 Icons.Logo,
                 null
         )

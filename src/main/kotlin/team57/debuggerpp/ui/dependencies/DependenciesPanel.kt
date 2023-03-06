@@ -71,7 +71,7 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
         }
 
         l.text = "<html>${prefix}" +
-                "<font color='#5693E2'>$displayName at ${dependency.location.lineNo}</font>" +
+                "<font color='#5693E2'>Line ${dependency.location.lineNo} ($displayName)</font>" +
                 "&nbsp&nbsp" +
                 "<font color='#999999'>$lineText</font>" +
                 "</html>"

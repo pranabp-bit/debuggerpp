@@ -108,7 +108,6 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
 
                     val staticLog = outputDirectory.resolve("slicer4j-static.log")
                     val icdgLog = outputDirectory.resolve("icdg.log")
-                    Desktop.getDesktop().open(outputDirectory.toFile())
 
                     indicator.text = "Instrumenting"
                     val (instrumentedState, processDirs) = slicer.instrument(env, outputDirectory, staticLog)

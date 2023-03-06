@@ -27,7 +27,7 @@
             <separator/>
             <action
                     class="team57.debuggerpp.ui.SelectSlicingCriterionAction"
-                    text="Select Line as Slicing Criterion"
+                    text="Start slicing from current line"
                     description="Select the line as the slicing criterion for Debugger++"
                     icon="team57.debuggerpp.ui.Icons.Logo">
             </action>
