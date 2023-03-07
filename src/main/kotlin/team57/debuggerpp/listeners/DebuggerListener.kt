@@ -54,6 +54,7 @@ class DebuggerListener : XDebuggerManagerListener {
             override fun processTerminated(processEvent: ProcessEvent) {}
             override fun processWillTerminate(processEvent: ProcessEvent, b: Boolean) {
                 sliceVisualizer.stop()
+                emptyDependenciesTabs(dataDepPanel, controlDepPanel, graphPanel)
             }
 
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {}
@@ -106,5 +107,15 @@ class DebuggerListener : XDebuggerManagerListener {
         dataPanel.updateDependencies(dataDependencies)
         controlPanel.updateDependencies(controlDependencies)
         graphPanel.updateGraph(currentLineNum)
+    }
+
+    private fun emptyDependenciesTabs(
+        dataPanel: DataDependenciesPanel,
+        controlPanel: ControlDependenciesPanel,
+        graphPanel: GraphPanel
+    ) {
+        dataPanel.emptyPanel()
+        controlPanel.emptyPanel()
+        graphPanel.emptyPanel()
     }
 }

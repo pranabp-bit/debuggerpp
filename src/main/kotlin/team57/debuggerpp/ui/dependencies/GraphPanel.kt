@@ -1,6 +1,8 @@
 package team57.debuggerpp.ui.dependencies
 
+import com.intellij.util.ui.StatusText
 import java.awt.Dimension
+import java.awt.GridBagLayout
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -35,6 +37,19 @@ class GraphPanel: JScrollPane(){
         val subGraph: SubGraphBuilder = SubGraphBuilder()
         subGraph.generateSubGraph(currentLineNum)
         return ImageIO.read(File(System.getProperty("java.io.tmpdir") + "\\slice-subgraph.png"))
+    }
+
+    fun emptyPanel() {
+        panel.removeAll()
+        val statusText = object : StatusText(this) {
+            override fun isStatusVisible(): Boolean {
+                return true
+            }
+        }
+        statusText.text = "Dependencies Graph is not available"
+        panel.layout = GridBagLayout()
+        panel.add(statusText.component)
+        updateUI()
     }
 
 }

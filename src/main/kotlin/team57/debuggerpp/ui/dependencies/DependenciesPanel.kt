@@ -8,9 +8,11 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.ui.StatusText
 import team57.debuggerpp.slicer.ProgramSlice
 import java.awt.Color
 import java.awt.Dimension
+import java.awt.GridBagLayout
 import java.awt.Insets
 import javax.swing.*
 
@@ -34,7 +36,7 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
     }
 
     protected fun addEmptyLabel() {
-        val l = JLabel("// Empty")
+        val l = JLabel("None")
         l.foreground = Color.GRAY
         l.border = BorderFactory.createEmptyBorder(0, 10, 0, 0)
         add(l)
@@ -86,5 +88,18 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
         l.maximumSize = Dimension(l.preferredSize.width, 18)
 
         add(l)
+    }
+
+    fun emptyPanel(text: String) {
+        removeAll()
+        val statusText = object : StatusText(this) {
+            override fun isStatusVisible(): Boolean {
+                return true
+            }
+        }
+        statusText.text = text
+        layout = GridBagLayout()
+        add(statusText.component)
+        updateUI()
     }
 }

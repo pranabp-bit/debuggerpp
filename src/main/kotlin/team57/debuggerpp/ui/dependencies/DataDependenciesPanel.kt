@@ -26,4 +26,8 @@ class DataDependenciesPanel(project: Project) : DependenciesPanel(project) {
         if (dependencies.isEmpty())
             addEmptyLabel()
     }
+
+    fun emptyPanel() {
+        emptyPanel("Data Dependencies are not available")
+    }
 }

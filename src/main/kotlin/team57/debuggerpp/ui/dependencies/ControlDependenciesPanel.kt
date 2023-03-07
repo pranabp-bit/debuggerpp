@@ -25,4 +25,8 @@ class ControlDependenciesPanel(project: Project) : DependenciesPanel(project) {
         if (dependencies.isEmpty())
             addEmptyLabel()
     }
+
+    fun emptyPanel() {
+        emptyPanel("Control Dependencies are not available")
+    }
 }
