@@ -24,6 +24,15 @@ class SelectSlicingCriterionAction : AnAction() {
         val SLICING_CRITERIA_KEY = Key.create<SourceLocation>("debuggerpp.slicing-criteria")
     }
 
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
+    }
+
+    override fun update(e: AnActionEvent) {
+        super.update(e)
+        e.presentation.isVisible = e.getData(CommonDataKeys.PSI_FILE)?.fileType is JavaFileType
+    }
+
     override fun actionPerformed(e: AnActionEvent) {
         // Selects the line the cursor is currently on, regardless of any highlighting
         val editor = e.getData(CommonDataKeys.EDITOR)!!
