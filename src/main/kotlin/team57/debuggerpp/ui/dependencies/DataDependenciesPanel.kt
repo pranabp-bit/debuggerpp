@@ -11,8 +11,6 @@ class DataDependenciesPanel(project: Project) : DependenciesPanel(project) {
         } else {
             addTitleLabel("From", YELLOW)
             updateDependencies(dependencies.from)
-            addTitleLabel("To", GREEN)
-            updateDependencies(dependencies.to)
         }
         updateUI()
     }
