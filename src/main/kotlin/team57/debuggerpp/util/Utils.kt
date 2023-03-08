@@ -3,9 +3,11 @@ package team57.debuggerpp.util
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import java.nio.file.Files
 import java.nio.file.Path
@@ -56,6 +58,19 @@ class Utils {
                     PsiClass::class.java
                 )?.qualifiedName
             }
+        }
+
+        @JvmStatic
+        fun findPsiClass(className: String, project: Project): PsiClass? {
+            val searchScope = GlobalSearchScope.allScope(project)
+            return ReadAction.compute<PsiClass?, Throwable> {
+                JavaPsiFacade.getInstance(project).findClass(className, searchScope)
+            }
+        }
+
+        @JvmStatic
+        fun findPsiFile(className: String, project: Project): PsiFile? {
+            return findPsiClass(className, project)?.containingFile
         }
     }
 }

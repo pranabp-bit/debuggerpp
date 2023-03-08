@@ -83,6 +83,10 @@ class ProgramSlice(private val project: Project, private val dynamicSlice: Dynam
         return@run map
     }
 
+    val firstLine: SourceLocation? = dynamicSlice.order.getOrNull(0)?.o1?.let {
+        SourceLocation(it.javaSourceFile, it.javaSourceLineNo - 1)
+    }
+
     class Dependencies(
         val data: DataDependencies = DataDependencies(),
         val control: ControlDependencies = ControlDependencies()

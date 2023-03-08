@@ -4,6 +4,7 @@ import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.ui.RunnerLayoutUi
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiManager
@@ -14,18 +15,22 @@ import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
 import com.intellij.xdebugger.XDebuggerManagerListener
-import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.dbgcontroller.DppJavaDebugProcess
+import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.ui.EditorSliceVisualizer
 import team57.debuggerpp.ui.Icons
 import team57.debuggerpp.ui.dependencies.ControlDependenciesPanel
 import team57.debuggerpp.ui.dependencies.DataDependenciesPanel
 import team57.debuggerpp.ui.dependencies.GraphPanel
 import team57.debuggerpp.util.SourceLocation
-import javax.swing.*
+import javax.swing.JComponent
 
 
 class DebuggerListener : XDebuggerManagerListener {
+    companion object {
+        private val LOG = Logger.getInstance(DebuggerListener::class.java)
+    }
+
     override fun processStarted(debugProcess: XDebugProcess) {
         if (debugProcess !is DppJavaDebugProcess) {
             return
@@ -37,6 +42,7 @@ class DebuggerListener : XDebuggerManagerListener {
         val controlDepPanel = ControlDependenciesPanel(project)
         val graphPanel = GraphPanel()
 
+        // Update Debugger++ tabs when paused
         session.addSessionListener(object : XDebugSessionListener {
             override fun sessionPaused() {
                 ApplicationManager.getApplication().invokeAndWait {
@@ -45,6 +51,7 @@ class DebuggerListener : XDebuggerManagerListener {
             }
         })
 
+        // Listen to process events to enable/disable line greying
         debugProcess.processHandler.addProcessListener(object : ProcessListener {
             override fun startNotified(processEvent: ProcessEvent) {
                 initDebuggerUI(session, dataDepPanel, controlDepPanel, graphPanel)

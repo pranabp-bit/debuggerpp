@@ -1,19 +1,17 @@
 package team57.debuggerpp.ui.dependencies
 
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.PsiClass
-import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.ui.JBColor
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.StatusText
 import team57.debuggerpp.slicer.ProgramSlice
+import team57.debuggerpp.util.Utils
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.GridBagLayout
-import java.awt.Insets
 import javax.swing.*
 
 
@@ -37,7 +35,7 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
 
     protected fun addEmptyLabel() {
         val l = JLabel("None")
-        l.foreground = Color.GRAY
+        l.foreground = JBColor.GRAY
         l.border = BorderFactory.createEmptyBorder(0, 10, 0, 0)
         add(l)
     }
@@ -50,14 +48,10 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
 
     protected fun addDependencyLine(prefix: String, dependency: ProgramSlice.Dependency) {
         val l = JButton()
-        val searchScope = GlobalSearchScope.allScope(project)
         var displayName = dependency.location.clazz
         var lineText = ""
-        val clazz = ReadAction.compute<PsiClass?, Throwable> {
-            JavaPsiFacade.getInstance(project).findClass(dependency.location.clazz, searchScope)
-        }
 
-        clazz?.containingFile?.let { file ->
+        Utils.findPsiFile(dependency.location.clazz, project)?.let { file ->
             val logicalLineNo = dependency.location.lineNo - 1
             displayName = file.name
             l.addActionListener {
@@ -79,7 +73,7 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
                 "</html>"
 
         l.isFocusPainted = false
-        l.margin = Insets(0, 0, 0, 0)
+        l.margin = JBUI.emptyInsets()
         l.isContentAreaFilled = false
         l.isBorderPainted = false
         l.isOpaque = false

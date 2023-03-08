@@ -13,23 +13,30 @@ import com.intellij.xdebugger.impl.actions.XDebuggerActions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import team57.debuggerpp.slicer.ProgramSlice;
+import team57.debuggerpp.util.SourceLocation;
 import team57.debuggerpp.util.Utils;
 
 import java.util.Set;
 
 public class DppJavaDebugProcess extends JavaDebugProcess {
     public final ProgramSlice slice;
+    public final BreakPointController breakPointController;
     boolean slicing;
 
     protected DppJavaDebugProcess(@NotNull XDebugSession session, @NotNull DebuggerSession javaSession, ProgramSlice slice) {
         super(session, javaSession);
         this.slice = slice;
         this.slicing = true;
+        this.breakPointController = new BreakPointController(getDebuggerSession().getProcess());
     }
 
     public static DppJavaDebugProcess create(@NotNull final XDebugSession session, @NotNull final DebuggerSession javaSession, ProgramSlice slice) {
         DppJavaDebugProcess res = new DppJavaDebugProcess(session, javaSession, slice);
         javaSession.getProcess().setXDebugProcess(res);
+        SourceLocation firstLine = slice.getFirstLine();
+        if (firstLine != null) {
+            res.breakPointController.addBreakpoint(firstLine);
+        }
         return res;
     }
 

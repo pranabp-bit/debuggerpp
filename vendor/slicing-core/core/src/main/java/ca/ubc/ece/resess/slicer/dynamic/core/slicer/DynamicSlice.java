@@ -31,13 +31,13 @@ public class DynamicSlice
     private SimpleDirectedWeightedGraph<Integer, DefaultWeightedEdge> chopGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
     private Map<Integer, Integer> methodOfStatement = new LinkedHashMap<>();
     private Set<Triple<Integer, Integer, String>> edgeTypes = new LinkedHashSet<>();
-    class OrderedSlice extends ArrayList<Pair<StatementInstance, AccessPath>> {
+    public class OrderedSlice extends ArrayList<Pair<StatementInstance, AccessPath>> {
 
         private static final long serialVersionUID = 7286928364073066546L;
 
     }
 
-    OrderedSlice order = new OrderedSlice();
+    public OrderedSlice order = new OrderedSlice();
 
 
     public DynamicSlice(){
