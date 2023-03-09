@@ -111,8 +111,8 @@ class DebuggerListener : XDebuggerManagerListener {
         val dataDependencies = dependencies?.data
         val controlDependencies = dependencies?.control
         // Update UI
-        dataPanel.updateDependencies(dataDependencies)
-        controlPanel.updateDependencies(controlDependencies)
+        dataPanel.updateDependencies(dataDependencies, location)
+        controlPanel.updateDependencies(controlDependencies, location)
         graphPanel.updateGraph(currentLineNum)
     }
 

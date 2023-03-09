@@ -8,6 +8,7 @@ import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.StatusText
 import team57.debuggerpp.slicer.ProgramSlice
+import team57.debuggerpp.util.SourceLocation
 import team57.debuggerpp.util.Utils
 import java.awt.Color
 import java.awt.Dimension
@@ -26,10 +27,24 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
         border = BorderFactory.createEmptyBorder(0, 10, 0, 10)
     }
 
-    protected fun addTitleLabel(title: String, foreground: Color) {
-        val l = JLabel("${title}:")
-        l.foreground = foreground
-        l.border = BorderFactory.createEmptyBorder(5, 0, 5, 0)
+    protected fun addTitleLabel(location: SourceLocation) {
+        val l = JButton()
+
+        var (displayName, lineText) = getLineButtonInfo(l, location)
+
+        l.text = "<html>To Line ${location.lineNo} ($displayName):</font>" +
+                "&nbsp&nbsp" +
+                "<font color='#999999'>$lineText</font>" +
+                "</html>"
+        l.foreground = YELLOW
+        l.isFocusPainted = false
+        l.margin = JBUI.emptyInsets()
+        l.isContentAreaFilled = false
+        l.isBorderPainted = false
+        l.isOpaque = false
+        l.horizontalAlignment = SwingConstants.LEFT
+        l.maximumSize = Dimension(l.preferredSize.width, 18)
+
         add(l)
     }
 
@@ -48,23 +63,8 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
 
     protected fun addDependencyLine(prefix: String, dependency: ProgramSlice.Dependency) {
         val l = JButton()
-        var displayName = dependency.location.clazz
-        var lineText = ""
 
-        Utils.findPsiFile(dependency.location.clazz, project)?.let { file ->
-            val logicalLineNo = dependency.location.lineNo - 1
-            displayName = file.name
-            l.addActionListener {
-                OpenFileDescriptor(project, file.virtualFile, logicalLineNo, Int.MAX_VALUE)
-                    .navigate(false)
-            }
-            val document = FileDocumentManager.getInstance().getDocument(file.virtualFile)
-            if (document != null) {
-                val start = document.getLineStartOffset(logicalLineNo)
-                val end = document.getLineEndOffset(logicalLineNo)
-                lineText = document.getText(TextRange(start, end))
-            }
-        }
+        var (displayName, lineText) = getLineButtonInfo(l, dependency.location)
 
         l.text = "<html>${prefix}" +
                 "<font color='#5693E2'>Line ${dependency.location.lineNo} ($displayName)</font>" +
@@ -82,6 +82,28 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
         l.maximumSize = Dimension(l.preferredSize.width, 18)
 
         add(l)
+    }
+
+    private fun getLineButtonInfo(button: JButton, location: SourceLocation): Array<String> {
+        var displayName = ""
+        var lineText = ""
+
+        Utils.findPsiFile(location.clazz, project)?.let { file ->
+            val logicalLineNo = location.lineNo - 1
+            displayName = file.name
+            button.addActionListener {
+                OpenFileDescriptor(project, file.virtualFile, logicalLineNo, Int.MAX_VALUE)
+                        .navigate(false)
+            }
+            val document = FileDocumentManager.getInstance().getDocument(file.virtualFile)
+            if (document != null) {
+                val start = document.getLineStartOffset(logicalLineNo)
+                val end = document.getLineEndOffset(logicalLineNo)
+                lineText = document.getText(TextRange(start, end))
+            }
+        }
+
+        return arrayOf(displayName, lineText)
     }
 
     fun emptyPanel(text: String) {

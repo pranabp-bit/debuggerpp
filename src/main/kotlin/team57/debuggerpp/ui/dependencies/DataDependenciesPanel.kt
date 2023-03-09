@@ -2,14 +2,16 @@ package team57.debuggerpp.ui.dependencies
 
 import com.intellij.openapi.project.Project
 import team57.debuggerpp.slicer.ProgramSlice
+import team57.debuggerpp.util.SourceLocation
 
 class DataDependenciesPanel(project: Project) : DependenciesPanel(project) {
-    fun updateDependencies(dependencies: ProgramSlice.DataDependencies?) {
+    fun updateDependencies(dependencies: ProgramSlice.DataDependencies?, location: SourceLocation?) {
         removeAll()
         if (dependencies == null) {
             addNoDependenciesMessage("Data")
         } else {
-            addTitleLabel("From", YELLOW)
+            if (location == null) return
+            addTitleLabel(location)
             updateDependencies(dependencies.from)
         }
         updateUI()
