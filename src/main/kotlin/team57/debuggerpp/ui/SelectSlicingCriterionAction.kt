@@ -1,10 +1,9 @@
 package team57.debuggerpp.ui
 
 import com.intellij.execution.ExecutionException
-import com.intellij.execution.ExecutionManager
+import com.intellij.execution.ExecutorRegistryImpl.RunnerHelper
 import com.intellij.execution.RunManager
 import com.intellij.execution.actions.RunConfigurationsComboBoxAction
-import com.intellij.execution.runners.ExecutionEnvironmentBuilder
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -12,6 +11,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.UserDataHolder
 import com.intellij.psi.PsiClass
 import com.intellij.psi.util.PsiTreeUtil
 import team57.debuggerpp.execute.DynamicSliceDebuggerExecutor
@@ -42,7 +42,7 @@ class SelectSlicingCriterionAction : AnAction() {
         val lineNo = document.getLineNumber(offset) + 1
         LOG.info("Selected slicing criterion line number is $lineNo")
 
-        // TODO: handle these situations
+        // TODO: show a dialog for these errors
         val element = psiFile.findElementAt(offset)
             ?: throw ExecutionException("Cannot find any element at this location")
         val clazz = PsiTreeUtil.getParentOfType(element, PsiClass::class.java)
@@ -59,21 +59,20 @@ class SelectSlicingCriterionAction : AnAction() {
         var selectedConfig = RunManager.getInstance(project).selectedConfiguration
         if (selectedConfig == null && RunConfigurationsComboBoxAction.hasRunCurrentFileItem(project)) {
             val psiFile = e.getData(CommonDataKeys.PSI_FILE)!!
-            for (runConfig in RunCurrentFile.getRunConfigsForCurrentFile(psiFile, true)) {
-                runConfig?.let { selectedConfig = runConfig }
-                break
-            }
+            selectedConfig = RunCurrentFile.getRunConfigsForCurrentFile(psiFile, true).find { it != null }
         }
-        if (selectedConfig == null) {
+        if (selectedConfig == null)
             throw IllegalStateException("no selected configuration and no current file config")
-        }
-        val builder = ExecutionEnvironmentBuilder.create(
+
+        // To be retrieved later in com.intellij.openapi.progress.Task.WithResult#getProgramSlice
+        (e.dataContext as UserDataHolder).putUserData(SLICING_CRITERIA_KEY, criteria)
+
+        RunnerHelper.run(
             project,
-            DynamicSliceDebuggerExecutor.instance!!,
-            selectedConfig!!.configuration
+            selectedConfig.configuration,
+            selectedConfig,
+            e.dataContext,
+            DynamicSliceDebuggerExecutor.instance!!
         )
-        val env = builder.build()
-        env.putUserData(SLICING_CRITERIA_KEY, criteria)
-        ExecutionManager.getInstance(project).restartRunProfile(env)
     }
 }

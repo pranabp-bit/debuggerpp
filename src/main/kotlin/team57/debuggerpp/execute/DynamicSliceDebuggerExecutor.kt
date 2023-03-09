@@ -18,7 +18,7 @@ class DynamicSliceDebuggerExecutor : Executor() {
             }
     }
 
-    override fun getToolWindowId(): String = ToolWindowId.RUN
+    override fun getToolWindowId(): String = ToolWindowId.DEBUG
 
     override fun getToolWindowIcon(): Icon = Icons.Logo
 
@@ -35,7 +35,9 @@ class DynamicSliceDebuggerExecutor : Executor() {
     override fun getStartActionText(): String = "Debug with Dynamic Slicing using Debugger++"
 
     override fun getStartActionText(configurationName: String): String =
-        TextWithMnemonic.parse("Debug '%s' with Dynamic Slicing using Debugger++").replaceFirst("%s", configurationName).toString()
+        TextWithMnemonic.parse("Debug '%s' with Dynamic Slicing using Debugger++")
+            .replaceFirst("%s", configurationName)
+            .toString()
 
     override fun getContextActionId(): String = "DebugWithDynamicSlicing"
 

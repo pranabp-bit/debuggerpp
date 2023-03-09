@@ -13,15 +13,17 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.UserDataHolder
 import com.intellij.xdebugger.*
 import com.intellij.xdebugger.impl.XDebugSessionImpl
+import team57.debuggerpp.dbgcontroller.DppJavaDebugProcess
 import team57.debuggerpp.slicer.JavaSlicer
 import team57.debuggerpp.slicer.ProgramSlice
-import team57.debuggerpp.dbgcontroller.DppJavaDebugProcess
 import team57.debuggerpp.ui.SelectSlicingCriterionAction
+import team57.debuggerpp.util.Patch
 import team57.debuggerpp.util.SourceLocation
-import java.awt.Desktop
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 
@@ -40,11 +42,17 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
     override fun canRun(executorId: String, profile: RunProfile) =
         executorId == DynamicSliceDebuggerExecutor.EXECUTOR_ID
 
+    override fun execute(environment: ExecutionEnvironment) {
+        Patch.forceSetDelegatedRunProfile(environment.runProfile, environment.runProfile)
+        super.execute(environment)
+    }
+
     override fun createContentDescriptor(
         state: RunProfileState,
         env: ExecutionEnvironment
     ): RunContentDescriptor? {
         val programSlice = runDynamicSlicing(env)
+            ?: return null
         env.putUserData(SLICE_KEY, programSlice)
         return super.createContentDescriptor(state, env)
     }
@@ -87,23 +95,34 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
         return result.get()
     }
 
-    private fun runDynamicSlicing(env: ExecutionEnvironment): ProgramSlice {
+    private fun runDynamicSlicing(env: ExecutionEnvironment): ProgramSlice? {
         val task =
             object : Task.WithResult<ProgramSlice, Exception>(env.project, "Executing Dynamic Slicing", true) {
-                override fun compute(indicator: ProgressIndicator): ProgramSlice {
+                override fun compute(indicator: ProgressIndicator): ProgramSlice? {
                     val outputDirectory = kotlin.io.path.createTempDirectory("slicer4j-outputs-")
-                    val currentProgramSlice = getProgramSlice(indicator, outputDirectory)
 
                     // *** for temp test used only ***
 //                    val testOutputDirectory = Files.createDirectories(Paths.get("src\\test\\kotlin\\team57\\debuggerpp\\execute\\generatedFile"));
 //                    getProgramSlice(indicator, testOutputDirectory);
 
-                    return currentProgramSlice
+                    return getProgramSlice(indicator, outputDirectory)
                 }
 
-                private fun getProgramSlice(indicator: ProgressIndicator, outputDirectory: Path): ProgramSlice {
-                    val slicingCriteriaLocation = env.getUserData(SelectSlicingCriterionAction.SLICING_CRITERIA_KEY)
-                            ?: lastSlicingCriteria ?: throw IllegalStateException("No slicing criteria") // TODO
+                private fun getProgramSlice(indicator: ProgressIndicator, outputDirectory: Path): ProgramSlice? {
+                    val slicingCriteriaLocation = (env.dataContext as UserDataHolder)
+                        .getUserData(SelectSlicingCriterionAction.SLICING_CRITERIA_KEY)
+                        ?: lastSlicingCriteria
+                        ?: run {
+                            ApplicationManager.getApplication().invokeLater {
+                                Messages.showErrorDialog(
+                                    project,
+                                    "Please select a slicing criteria by right-clicking on the line",
+                                    "No Slicing Criteria"
+                                )
+                            }
+                            return null
+                        }
+
                     lastSlicingCriteria = slicingCriteriaLocation
 
                     val staticLog = outputDirectory.resolve("slicer4j-static.log")
@@ -121,10 +140,10 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
 
                     indicator.text = "Locating slicing criteria"
                     val slicingCriteria =
-                            slicer.locateSlicingCriteria(graph, slicingCriteriaLocation)
+                        slicer.locateSlicingCriteria(graph, slicingCriteriaLocation)
                     if (slicingCriteria.isEmpty()) {
                         throw ExecutionException(
-                                "Unable to locate $slicingCriteriaLocation in the dynamic control flow graph"
+                            "Unable to locate $slicingCriteriaLocation in the dynamic control flow graph"
                         )
                     }
 
@@ -133,6 +152,6 @@ class DynamicSliceDebuggerRunner : GenericDebuggerRunner() {
                 }
             }
         task.queue() // This runs synchronously for modal tasks
-        return task.result!!
+        return task.result
     }
 }
