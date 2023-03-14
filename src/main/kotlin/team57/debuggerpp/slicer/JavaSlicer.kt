@@ -126,17 +126,22 @@ class JavaSlicer {
 
     fun collectTrace(executionResult: ExecutionResult, outputDirectory: Path, staticLog: Path): Trace {
         val stdoutLog = outputDirectory.resolve("instrumented-stdout.log")
+        val stderrLog = outputDirectory.resolve("instrumented-stderr.log")
 
-        stdoutLog.bufferedWriter().use { writer ->
-            executionResult.processHandler.addProcessListener(object : ProcessAdapter() {
-                override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                    if (outputType === ProcessOutputTypes.STDOUT) {
-                        writer.write(event.text)
+        stdoutLog.bufferedWriter().use { stdWriter ->
+            stderrLog.bufferedWriter().use { errWriter ->
+                executionResult.processHandler.addProcessListener(object : ProcessAdapter() {
+                    override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                        if (outputType === ProcessOutputTypes.STDOUT) {
+                            stdWriter.write(event.text)
+                        } else if (outputType == ProcessOutputTypes.STDERR) {
+                            errWriter.write(event.text)
+                        }
                     }
-                }
-            })
-            executionResult.processHandler.startNotify()
-            executionResult.processHandler.waitFor()
+                })
+                executionResult.processHandler.startNotify()
+                executionResult.processHandler.waitFor()
+            }
         }
 
         val trace = Parser.readFile(stdoutLog.pathString, staticLog.pathString)
