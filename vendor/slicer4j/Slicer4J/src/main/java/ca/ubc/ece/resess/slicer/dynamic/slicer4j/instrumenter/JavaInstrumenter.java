@@ -53,7 +53,7 @@ public class JavaInstrumenter extends Instrumenter {
     InstrumentationCounter globalLineCounter = new InstrumentationCounter();
     Chain<SootClass> libClasses = null;
     String jarName;
-    private Set<String> instrumentedClasses = new HashSet<>();
+    private final Set<String> instrumentedClasses = new HashSet<>();
 
     public JavaInstrumenter() {
     }
@@ -127,7 +127,9 @@ public class JavaInstrumenter extends Instrumenter {
                     return;
                 }
 
-                instrumentedClasses.add(cls.getName());
+                synchronized (instrumentedClasses) {
+                    instrumentedClasses.add(cls.getName());
+                }
 
                 Long methodSize = 0L;
                 SootMethod mtd = b.getMethod();
