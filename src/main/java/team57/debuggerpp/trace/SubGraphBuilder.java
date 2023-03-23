@@ -49,7 +49,7 @@ public class SubGraphBuilder {
         // Loop through the nodes in the graph. For each node, check if the line# appears before the current line in sliceLines
         // If it does, keep it; if not, remove the node and corresponding links
         for (MutableNode node : g.nodes()) {
-            System.out.println("Node name :" + node.name());
+//            System.out.println("Node name :" + node.name());
             String nodeName = String.valueOf(node.name());
             Pattern pattern = Pattern.compile("Main:(\\d+):");
             Matcher matcher = pattern.matcher(nodeName);
@@ -63,6 +63,34 @@ public class SubGraphBuilder {
                     if (Objects.equals(sliceLine, currentLine)) {
                         break;
                     }
+                }
+            }
+        }
+
+        // The code below is for reversing every link in the subgraph
+        // Create a list to store the reversed links
+        ArrayList<Link> reversedLinks = new ArrayList<>();
+        // Create a list to store the names of the target nodes of the links
+        ArrayList<String> targetNodeNames = new ArrayList<>();
+
+        // Iterate over all nodes in the graph
+        for (MutableNode node : subGraph.nodes()) {
+            // Iterate over all links of the current node
+            for (Link link : node.links()) {
+                // Create a new link with reversed direction and add it to the list
+                reversedLinks.add(Link.to(node).with(link.attrs()));
+                targetNodeNames.add(link.to().name().toString());
+            }
+            // Remove all links from the current node
+            node.links().clear();
+        }
+
+        // Add all reversed links to their target nodes
+        for (int i = 0; i < reversedLinks.size(); i++) {
+            for (MutableNode targetNode : subGraph.nodes()) {
+                if (targetNode.name().toString().equals(targetNodeNames.get(i))) {
+//                    System.out.println("name matched! - " + targetNodeNames.get(i));
+                    targetNode.addLink(reversedLinks.get(i));
                 }
             }
         }

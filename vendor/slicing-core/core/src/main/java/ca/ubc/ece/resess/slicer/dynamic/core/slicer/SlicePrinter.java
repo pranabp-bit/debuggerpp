@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import guru.nidi.graphviz.attribute.*;
+import guru.nidi.graphviz.model.*;
 import org.jgrapht.Graphs;
 
 import org.apache.commons.io.FileUtils;
@@ -32,10 +33,6 @@ import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.engine.GraphvizException;
 import guru.nidi.graphviz.engine.Rasterizer;
-import guru.nidi.graphviz.model.Graph;
-import guru.nidi.graphviz.model.LinkSource;
-import guru.nidi.graphviz.model.MutableGraph;
-import guru.nidi.graphviz.model.Node;
 
 import static guru.nidi.graphviz.attribute.Color.TRANSPARENT;
 import static guru.nidi.graphviz.model.Factory.*;
@@ -92,6 +89,12 @@ public class SlicePrinter {
             } else {
                 g.add(newNode.link(to(node(String.valueOf(sliceNode.getJavaSourceFile() + ":" + sliceNode.getJavaSourceLineNo()) + ": " + destStr))
                                 .with(edgeStyle, Label.of(edgeStr))));
+                // Reverse the direction of the graph
+                // Right now the direction is reversed in SubGraphBuilder, as it is very hard to build a subgraph if the
+                // links are reversed here. (Since adding a node adds all of its children, and only root nodes can be
+                // removed)
+//                g.add((node(String.valueOf(sliceNode.getJavaSourceFile() + ":" + sliceNode.getJavaSourceLineNo()) + ": " + destStr)).link(to(newNode)
+//                        .with(edgeStyle, Label.of(edgeStr))));
             }
 
             // List<Node> clusterNodes = new ArrayList<>();
