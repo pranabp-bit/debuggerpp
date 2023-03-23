@@ -90,6 +90,9 @@ abstract class DependenciesPanel(protected val project: Project) : JPanel() {
 
         Utils.findPsiFile(location.clazz, project)?.let { file ->
             val logicalLineNo = location.lineNo - 1
+            if (logicalLineNo < 0) {
+                return@let
+            }
             displayName = file.name
             button.addActionListener {
                 OpenFileDescriptor(project, file.virtualFile, logicalLineNo, Int.MAX_VALUE)

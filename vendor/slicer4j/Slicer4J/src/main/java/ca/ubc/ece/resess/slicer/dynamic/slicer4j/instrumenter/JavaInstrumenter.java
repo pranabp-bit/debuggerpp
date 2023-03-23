@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
@@ -395,10 +397,26 @@ public class JavaInstrumenter extends Instrumenter {
         return Collections.singletonList(outDir);
     }
 
+    /**
+     * Copy files that are not processed by soot, like unzipTo
+     * @param source
+     * @param destination
+     * @throws IOException
+     */
     private void copyIfMissing(File source, File destination) throws IOException {
-        // TODO: copy files that are not processed by soot, like unzipTo
-        if (!destination.isDirectory()) {
-            throw new AssertionError();
+        Iterator<Path> it = Files.walk(source.toPath()).iterator();
+        while (it.hasNext()) {
+            Path path = it.next();
+            String p = path.toString();
+            Path dstPath = destination.toPath().resolve(path);
+            if (p.endsWith(".jar")) {
+                unzipTo(source.toPath().resolve(path).toFile(), dstPath.getParent().toFile());
+            } else if (!p.endsWith("/") && !p.endsWith(".class") && !p.contains("META-INF")) {
+                if (!Files.exists(dstPath)) {
+                    boolean ignored = dstPath.toFile().mkdirs();
+                    Files.copy(source.toPath().resolve(path), dstPath);
+                }
+            }
         }
     }
 
