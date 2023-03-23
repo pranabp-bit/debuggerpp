@@ -35,11 +35,11 @@ public class SubGraphBuilder {
         List<Integer> sliceLines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(sliceFilePath))) {
             String line;
-            Pattern pattern = Pattern.compile("Main:(\\d+)");
+            Pattern pattern = Pattern.compile("([a-zA-Z]+):(\\d+)");
             while ((line = reader.readLine()) != null) {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
-                    sliceLines.add(Integer.parseInt(matcher.group(1)));
+                    sliceLines.add(Integer.parseInt(matcher.group(2)));
                 }
             }
         } catch (IOException e) {
@@ -51,10 +51,10 @@ public class SubGraphBuilder {
         for (MutableNode node : g.nodes()) {
 //            System.out.println("Node name :" + node.name());
             String nodeName = String.valueOf(node.name());
-            Pattern pattern = Pattern.compile("Main:(\\d+):");
+            Pattern pattern = Pattern.compile("([a-zA-Z]+):(\\d+):");
             Matcher matcher = pattern.matcher(nodeName);
             if (matcher.find()) {
-                Integer NodeLineNum = Integer.parseInt(matcher.group(1));
+                Integer NodeLineNum = Integer.parseInt(matcher.group(2));
                 for (Integer sliceLine : sliceLines) {
                     if (Objects.equals(sliceLine, NodeLineNum)) {
                         subGraph.add(node);
