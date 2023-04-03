@@ -4,6 +4,7 @@ import guru.nidi.graphviz.attribute.Color;
 import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.engine.Rasterizer;
 import guru.nidi.graphviz.model.Link;
 import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.model.MutableNode;
@@ -44,6 +45,20 @@ public class SubGraphBuilder {
             }
         } catch (IOException e) {
             System.out.println("An error occurred while reading the log file: " + e.getMessage());
+            return;
+        }
+
+        // Check if currentLine is valid (it should appear in sliceLines)
+        boolean isValid = false;
+        for (Integer sliceLine : sliceLines) {
+            if (Objects.equals(sliceLine, currentLine)) {
+                isValid = true;
+                break;
+            }
+        }
+        if (!isValid) {
+            System.out.println("Line is not valid!");
+            return;
         }
 
         // Loop through the nodes in the graph. For each node, check if the line# appears before the current line in sliceLines
@@ -53,8 +68,10 @@ public class SubGraphBuilder {
             String nodeName = String.valueOf(node.name());
             Pattern pattern = Pattern.compile("([a-zA-Z]+):(\\d+):");
             Matcher matcher = pattern.matcher(nodeName);
+//            System.out.println("Node name is: " + nodeName);
             if (matcher.find()) {
                 Integer NodeLineNum = Integer.parseInt(matcher.group(2));
+//                System.out.println("Current node number is: " + NodeLineNum);
                 for (Integer sliceLine : sliceLines) {
                     if (Objects.equals(sliceLine, NodeLineNum)) {
                         subGraph.add(node);
@@ -65,6 +82,11 @@ public class SubGraphBuilder {
                     }
                 }
             }
+        }
+
+        if (subGraph.nodes().isEmpty()) {
+            System.out.println("Subgraph is empty!");
+            return;
         }
 
         // The code below is for reversing every link in the subgraph
@@ -99,5 +121,7 @@ public class SubGraphBuilder {
         subGraph.nodeAttrs().add(Color.WHITE.font()).linkAttrs().add(Color.WHITE.font());
         subGraph.graphAttrs().add(TRANSPARENT.background());
         Graphviz.fromGraph(subGraph).width(1200).render(Format.PNG).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-subgraph.png"));
+        // Only for testing purposes
+        Graphviz.fromGraph(subGraph).rasterize(Rasterizer.builtIn("dot")).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-subgraph.dot"));
     }
 }
