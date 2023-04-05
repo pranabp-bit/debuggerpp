@@ -120,7 +120,7 @@ class JavaSlicer {
 
             else -> throw ExecutionException("Unable to instrument this type of RunProfileState")
         }
-        decompileAll(env.project, sootOutputDirectory) // Optional, for debugging purposes
+//        decompileAll(env.project, sootOutputDirectory) // Optional, for debugging purposes
         return Pair(state, processDirs)
     }
 
