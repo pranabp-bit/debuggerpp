@@ -1,6 +1,7 @@
 package team57.debuggerpp.util
 
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.JavaPsiFacade
@@ -63,7 +64,7 @@ class Utils {
         @JvmStatic
         fun findPsiClass(className: String, project: Project): PsiClass? {
             val searchScope = GlobalSearchScope.allScope(project)
-            return ReadAction.compute<PsiClass?, Throwable> {
+            return DumbService.getInstance(project).computeWithAlternativeResolveEnabled<PsiClass?, Throwable> {
                 JavaPsiFacade.getInstance(project).findClass(className, searchScope)
             }
         }
