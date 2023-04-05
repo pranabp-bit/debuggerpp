@@ -104,7 +104,12 @@ class JavaSlicer {
             is JavaCommandLineState -> {
                 val params = state.javaParameters
                 val jdkPath = params.jdkPath
-                val instrumentClassPaths = params.classPath.pathList.filterNot { it.startsWith(jdkPath) }
+                val instrumentClassPaths = params.classPath.pathList.filterNot {
+                    it.startsWith(jdkPath) ||
+                            it.matches(Regex(".*\\\\junit-[\\d.]*\\.jar")) || // Skip JUnit
+                            it.matches(Regex(".*\\\\hamcrest-core-[\\d.]*\\.jar")) || // Skip hamcrest
+                            it.matches(Regex(".*\\\\com.jetbrains.intellij.idea\\\\ideaIC\\\\.*.jar")) // Skip Idea
+                }
                 val instrumentedClasPaths = JavaInstrumenter()
                     .instrumentClassPaths(
                         instrumentationOptions,
