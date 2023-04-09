@@ -110,6 +110,7 @@ class JavaSlicer {
                             it.matches(Regex(".*\\\\hamcrest-core-[\\d.]*\\.jar")) || // Skip hamcrest
                             it.matches(Regex(".*\\\\com.jetbrains.intellij.idea\\\\ideaIC\\\\.*.jar")) // Skip Idea
                 }
+                LOG.info("Instrument Class paths: $instrumentClassPaths")
                 val instrumentedClasPaths = JavaInstrumenter()
                     .instrumentClassPaths(
                         instrumentationOptions,
