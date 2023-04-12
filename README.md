@@ -65,7 +65,7 @@ PS. Slicer4J has been included as an internal dependency
 ### 4.3 `DebugController`
 Located at: [src/main/java/team57/debuggerpp/dbgcontroller](https://github.com/Debugger-Plus-Plus/debuggerpp/tree/master/src/main/java/team57/debuggerpp/dbgcontroller)
 
-This component is designed to implement skipping of non-slice lines by modifying the behaviour of existing debug actions. It has two subcomponents:
+This component is designed to implement skipping of non-slice lines by modifying the behaviour of existing debug actions. It has 3 subcomponents:
 - `DppJavaDebugProcess`: for handling the 'Run to Position' action only.
 
 We create a subclass of `JavaDebugProcess`, namely `DppJavaDebugProcess`, and a subclass of `GenericDebuggerRunner`, namely `DynamicSliceDebuggerRunner`. `DppJavaDebugProcess` overrides the original debug action handlers, and `DynamicSliceDebuggerRunner` overrides the `attachVirtualMachine` method to create `DppJavaDebugProcess` instead of `JavaDebugProcess`.
@@ -73,6 +73,8 @@ We create a subclass of `JavaDebugProcess`, namely `DppJavaDebugProcess`, and a 
 - `DppJvmSteppingCommandProvider`: provides step into and step over commands that skip non-slice lines.
 
 The stepping commands inherit from the original commands but with the difference that they override the `checkCurrentPosition` function. The `checkCurrentPosition` function determines the next step (step again or stop) after the target debugee process has performed a stepping and before the debugger updates the UI and reports back to the user that the stepping command has finished. In Debugger++, we provide stepping commands that instruct the debuggee to step over again until the current line is in the slice.
+
+- `BreakPointController`: for managing breakpoints that are specific to Debugger++’s needs. It adds a breakpoint to the first slice line.
 
 ### 4.4 `UI`
 Located at: [src/main/kotlin/team57/debuggerpp/ui](https://github.com/Debugger-Plus-Plus/debuggerpp/blob/master/src/main/kotlin/team57/debuggerpp/ui)
@@ -88,6 +90,9 @@ Located at: [src/main/java/team57/debuggerpp/trace/SubGraphBuilder](https://gith
 This component is for generating a subgraph containing all statements that have been executed and their direct dependencies in a debugging session. The subgraph is dynamically generated as the user steps over each line in the slice.
 
 ## 5. Testing
+For the unit tests, run `./gradlew test` in the project root directory. The unit tests for `SubGraphBuilder` cannot be run in parallel because they all need to read from the same dot file, we must run them separately.
+
+For the integration test, open the Debugger++ repository in IntelliJ IDEA, and make sure you build Gradle correctly. Next, open the test repository by running the `runIdeForUiTest` command. Finally, visit `src/test/java/team57/debuggerpp/dbgcontroller/pages/UITest.java` to run the test.
 
 ## 6. Authors and acknowledgment
 This project was developed by Arya Subramanyam, Juntong Luo, Jane Shi and Robin Lai for the ReSeSS Research Lab. 
