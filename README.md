@@ -90,7 +90,7 @@ Located at: [src/main/java/team57/debuggerpp/trace/SubGraphBuilder](https://gith
 This component is for generating a subgraph containing all statements that have been executed and their direct dependencies in a debugging session. The subgraph is dynamically generated as the user steps over each line in the slice.
 
 ## 5. Testing
-For the unit tests, run `./gradlew test` in the project root directory. The unit tests for `SubGraphBuilder` cannot be run in parallel because they all need to read from the same dot file, we must run them separately.
+For the unit tests, run `./gradlew test` in the project root directory.
 
 For the integration test, open the Debugger++ repository in IntelliJ IDEA, and make sure you build Gradle correctly. Next, open the test repository by running the `runIdeForUiTest` command. Finally, visit `src/test/java/team57/debuggerpp/dbgcontroller/pages/UITest.java` to run the test.
 
