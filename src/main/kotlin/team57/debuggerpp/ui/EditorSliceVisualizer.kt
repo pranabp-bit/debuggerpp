@@ -2,7 +2,9 @@ package team57.debuggerpp.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.HighlighterLayer
+import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -14,17 +16,35 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
+import com.intellij.ui.Gray
 import team57.debuggerpp.slicer.ProgramSlice
-import java.awt.Color
 
 
 class EditorSliceVisualizer(private val project: Project, private val slice: ProgramSlice) {
     companion object {
         private val LOG = Logger.getInstance(EditorSliceVisualizer::class.java)
         private val greyOutAttributes = TextAttributes()
+        private val GREY_OUT_COLOR = Gray._77
 
         init {
-            greyOutAttributes.foregroundColor = Color(77, 77, 77)
+            greyOutAttributes.foregroundColor = GREY_OUT_COLOR
+        }
+
+        /**
+         * Called in [team57.debuggerpp.pages.EditorComponentImplFixture.getGreyedOutLines]
+         */
+        @JvmStatic
+        fun getGreyedOutLines(editor: Editor): HashSet<Int> {
+            val greyedOutLines = HashSet<Int>()
+            for (highlighter in editor.markupModel.allHighlighters) {
+                if (highlighter.targetArea == HighlighterTargetArea.LINES_IN_RANGE) {
+                    if (GREY_OUT_COLOR == highlighter.getTextAttributes(null)?.foregroundColor) {
+                        greyedOutLines.add(editor.document.getLineNumber(highlighter.startOffset))
+                        greyedOutLines.add(editor.document.getLineNumber(highlighter.endOffset))
+                    }
+                }
+            }
+            return greyedOutLines
         }
     }
 

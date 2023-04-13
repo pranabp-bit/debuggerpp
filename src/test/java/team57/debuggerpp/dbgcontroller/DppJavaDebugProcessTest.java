@@ -1,7 +1,9 @@
 package team57.debuggerpp.dbgcontroller;
 
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 import org.junit.Test;
+import team57.debuggerpp.slicer.JavaSlicer;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -36,6 +38,9 @@ public class DppJavaDebugProcessTest {
                     "team57.debuggerpp.Main:31\n" +
                     "team57.debuggerpp.Main:36\n");
             myWriter.close();
+            JavaSlicer javaSlicer = new JavaSlicer();
+//            javaSlicer.instrumentJar();
+
             File file1 = new File("sliceTest.log");
             Path generatedFile = Paths.get("src\\test\\kotlin\\team57\\debuggerpp\\execute\\generatedFile\\slice.log");
 //            File file2 = new File(String.valueOf(generatedFile));

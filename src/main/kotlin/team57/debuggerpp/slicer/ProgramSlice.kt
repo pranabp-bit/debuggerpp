@@ -15,41 +15,46 @@ import team57.debuggerpp.util.SourceLocation
 import java.util.*
 
 
-class ProgramSlice(private val project: Project, private val dynamicSlice: DynamicSlice) {
+class ProgramSlice(private val project: Project?, private val dynamicSlice: DynamicSlice) {
     companion object {
         private val LOG = Logger.getInstance(ProgramSlice::class.java)
     }
 
-    val sliceLinesUnordered: Map<String, Set<Int>> = ReadAction.compute<Map<String, Set<Int>>, Throwable> {
-        val map = HashMap<String, MutableSet<Int>>()
-        val documentManager = PsiDocumentManager.getInstance(project)
-        val searchScope = GlobalSearchScope.allScope(project)
-        val psiFacade = JavaPsiFacade.getInstance(project)
-        for (sliceNode in dynamicSlice.map { x -> x.o1.o1 }) {
-            if (sliceNode.javaSourceLineNo < 0)
-                continue
-            val set = map.getOrPut(sliceNode.javaSourceFile) { HashSet() }
-            val line = sliceNode.javaSourceLineNo - 1
-            val clazz = psiFacade.findClass(sliceNode.javaSourceFile, searchScope)
-            val file = clazz?.containingFile
-            val document = file?.let { documentManager.getDocument(file) }
-            if (document != null) {
-                val lineOffset = (document.getLineStartOffset(line) + document.getLineEndOffset(line)) / 2
-                val element = file.findElementAt(lineOffset)
-                element?.parents(false)
-                    ?.forEach {
-                        if (it !is PsiIfStatement) {
-                            set.add(document.getLineNumber(it.startOffset))
-                            set.add(document.getLineNumber(it.endOffset))
-                        }
-                    }
-            }
-            set.add(line)
+    val sliceLinesUnordered: Map<String, Set<Int>> by lazy {
+        if (project == null) {
+            throw IllegalStateException()
         }
-        return@compute map
+        ReadAction.compute<Map<String, Set<Int>>, Throwable> {
+            val map = HashMap<String, MutableSet<Int>>()
+            val documentManager = PsiDocumentManager.getInstance(project)
+            val searchScope = GlobalSearchScope.allScope(project)
+            val psiFacade = JavaPsiFacade.getInstance(project)
+            for (sliceNode in dynamicSlice.map { x -> x.o1.o1 }) {
+                if (sliceNode.javaSourceLineNo < 0)
+                    continue
+                val set = map.getOrPut(sliceNode.javaSourceFile) { HashSet() }
+                val line = sliceNode.javaSourceLineNo - 1
+                val clazz = psiFacade.findClass(sliceNode.javaSourceFile, searchScope)
+                val file = clazz?.containingFile
+                val document = file?.let { documentManager.getDocument(file) }
+                if (document != null) {
+                    val lineOffset = (document.getLineStartOffset(line) + document.getLineEndOffset(line)) / 2
+                    val element = file.findElementAt(lineOffset)
+                    element?.parents(false)
+                        ?.forEach {
+                            if (it !is PsiIfStatement) {
+                                set.add(document.getLineNumber(it.startOffset))
+                                set.add(document.getLineNumber(it.endOffset))
+                            }
+                        }
+                }
+                set.add(line)
+            }
+            return@compute map
+        }
     }
 
-    val dependencies: Map<SourceLocation, Dependencies> = run {
+    val dependencies: Map<SourceLocation, Dependencies> by lazy {
         val map = HashMap<SourceLocation, Dependencies>()
         val entriesSeen = HashSet<Triple<String, SourceLocation, SourceLocation>>()
         for (entry in dynamicSlice) {
@@ -80,24 +85,35 @@ class ProgramSlice(private val project: Project, private val dynamicSlice: Dynam
                 else -> throw IllegalStateException("Unknown dependency type $type")
             }
         }
-        return@run map
+        return@lazy map
     }
 
-    val firstLine: SourceLocation? = dynamicSlice.order.getOrNull(0)?.o1?.let {
-        SourceLocation(it.javaSourceFile, it.javaSourceLineNo - 1)
+    val firstLine: SourceLocation? by lazy {
+        dynamicSlice.order.getOrNull(0)?.o1?.let {
+            SourceLocation(it.javaSourceFile, it.javaSourceLineNo - 1)
+        }
     }
 
     class Dependencies(
         val data: DataDependencies = DataDependencies(),
         val control: ControlDependencies = ControlDependencies()
-    )
+    ) {
+        override fun equals(other: Any?) = (other is Dependencies) && data == other.data && control == other.control
+        override fun hashCode() = Objects.hash(data, control)
+    }
 
-    class DataDependencies(val from: List<DataDependency> = ArrayList(), val to: List<DataDependency> = ArrayList())
+    class DataDependencies(val from: List<DataDependency> = ArrayList(), val to: List<DataDependency> = ArrayList()) {
+        override fun equals(other: Any?) = (other is DataDependencies) && from == other.from && to == other.to
+        override fun hashCode() = Objects.hash(from, to)
+    }
 
     class ControlDependencies(
         val from: List<ControlDependency> = ArrayList(),
         val to: List<ControlDependency> = ArrayList()
-    )
+    ) {
+        override fun equals(other: Any?) = (other is ControlDependencies) && from == other.from && to == other.to
+        override fun hashCode() = Objects.hash(from, to)
+    }
 
     abstract class Dependency(val location: SourceLocation) {
         override fun equals(other: Any?) = (other is Dependency) && location == other.location

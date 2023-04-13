@@ -1,0 +1,12 @@
+18, <team57.debuggerpp.Main: void main(java.lang.String[])>, $stack2 = staticinvoke <team57.debuggerpp.Main: int test1(int,int)>(10, 15), 1
+11, <team57.debuggerpp.Main: int test1(int,int)>, z = y - 5, 1
+11, <team57.debuggerpp.Main: int test1(int,int)>, r = z + 5, 1
+11, <team57.debuggerpp.Main: int test1(int,int)>, if x <= 0 goto tmpString = "13", 1
+12, <team57.debuggerpp.Main: int test1(int,int)>, z = x + y, 1
+12, <team57.debuggerpp.Main: int test1(int,int)>, goto [?= tmpString = "14"], 1
+14, <team57.debuggerpp.Main: int test1(int,int)>, goto [?= tmpString = "15"], 1
+15, <team57.debuggerpp.Main: int test1(int,int)>, if r == 15 goto tmpString = "17", 1
+17, <team57.debuggerpp.Main: int test1(int,int)>, return z, 1
+19, <team57.debuggerpp.Main: void main(java.lang.String[])>, $stack3 = <java.lang.System: java.io.PrintStream out>, 1
+19, <team57.debuggerpp.Main: void main(java.lang.String[])>, virtualinvoke $stack3.<java.io.PrintStream: void println(int)>($stack2), 1
+20, <team57.debuggerpp.Main: void main(java.lang.String[])>, return, 1

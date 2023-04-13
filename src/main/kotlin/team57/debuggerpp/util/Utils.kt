@@ -10,6 +10,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.util.io.readText
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
@@ -73,5 +74,13 @@ class Utils {
         fun findPsiFile(className: String, project: Project): PsiFile? {
             return findPsiClass(className, project)?.containingFile
         }
+
+        @JvmStatic
+        fun readTextReplacingLineSeparator(path: Path) = path.readText().replace("\r\n", "\n").trim()
+
+        @JvmStatic
+        fun getFileContentSha256(path: Path): String = org.apache.commons.codec.digest.DigestUtils.sha256Hex(
+            readTextReplacingLineSeparator(path)
+        )
     }
 }

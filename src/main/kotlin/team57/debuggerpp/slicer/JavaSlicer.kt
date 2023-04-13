@@ -57,12 +57,12 @@ class JavaSlicer {
 
     init {
         val loggerFile = createTempFile("slicer4-logger-", ".jar")
-        val loggerJar = Slicer::class.java.getResourceAsStream("/DynamicSlicingLogger.jar")!!
+        val loggerJar = JavaSlicer::class.java.getResourceAsStream("/DynamicSlicingLogger.jar")!!
         Files.copy(loggerJar, loggerFile, StandardCopyOption.REPLACE_EXISTING)
         loggerPath = loggerFile.toString()
 
         val modelsDirectory = createTempDirectory("slicer4-models-")
-        val modelsZip = Slicer::class.java.getResourceAsStream("/models.zip")!!
+        val modelsZip = JavaSlicer::class.java.getResourceAsStream("/models.zip")!!
         Utils.unzipAll(ZipInputStream(modelsZip), modelsDirectory)
         modelsPath = modelsDirectory.toString()
         stubDroidPath = modelsDirectory.resolve("summariesManual").toString()
@@ -157,6 +157,19 @@ class JavaSlicer {
         return trace
     }
 
+    fun instrumentJar(inJarPath: String, staticLogPath: String, outputDirectory: Path, outJarPath: String) {
+        val sootOutputDirectory = outputDirectory.resolve("soot-output")
+        sootOutputDirectory.toFile().mkdir()
+        JavaInstrumenter(outJarPath)
+            .instrumentJar(
+                "",
+                staticLogPath,
+                inJarPath,
+                loggerPath,
+                sootOutputDirectory.pathString
+            )
+    }
+
     fun createDynamicControlFlowGraph(output: Path, trace: Trace, processDirs: List<String>): DynamicControlFlowGraph {
         Slicer.prepare(processDirs)
         val graph = DynamicControlFlowGraph()
@@ -201,7 +214,7 @@ class JavaSlicer {
         }
     }
 
-    private fun saveTrace(trace: Trace, outputDirectory: Path) {
+    fun saveTrace(trace: Trace, outputDirectory: Path) {
         outputDirectory.resolve("trace.log")
             .bufferedWriter().use { writer ->
                 for (statement in trace) {
@@ -211,7 +224,7 @@ class JavaSlicer {
             }
     }
 
-    private fun extractRawTrace(stdoutLog: Path, outputDirectory: Path) {
+    fun extractRawTrace(stdoutLog: Path, outputDirectory: Path) {
         val rawTraceLog = outputDirectory.resolve("raw-trace.log")
         rawTraceLog.outputStream().use { os ->
             val inflaterOutputStream = InflaterOutputStream(os)
@@ -227,7 +240,7 @@ class JavaSlicer {
         }
     }
 
-    private fun slice(
+    fun slice(
         outDir: String, icdg: DynamicControlFlowGraph, processDirectories: List<String?>?,
         backwardSlicePositions: List<Int?>, stubDroidPath: String?, taintWrapperPath: String?,
         frameworkPath: String?, variableString: String?, frameworkModel: Boolean, sliceOnce: Boolean
