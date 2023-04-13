@@ -1,7 +1,6 @@
 package team57.debuggerpp.trace;
 
 import guru.nidi.graphviz.attribute.Color;
-import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.engine.Rasterizer;
@@ -24,7 +23,7 @@ import static guru.nidi.graphviz.attribute.Color.TRANSPARENT;
 import static guru.nidi.graphviz.model.Factory.mutGraph;
 
 public class SubGraphBuilder {
-    public void generateSubGraph(int currentLine) throws IOException {
+    public void generateSubGraph(int currentLine, File outputPngFile, File outputDotFile) throws IOException {
         Parser parser = new Parser();
         // Read the full graph
         MutableGraph g = parser.read(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.dot"));
@@ -120,8 +119,7 @@ public class SubGraphBuilder {
         subGraph.nodeAttrs().add(Color.WHITE).linkAttrs().add(Color.WHITE).graphAttrs().add(Color.WHITE);
         subGraph.nodeAttrs().add(Color.WHITE.font()).linkAttrs().add(Color.WHITE.font());
         subGraph.graphAttrs().add(TRANSPARENT.background());
-        Graphviz.fromGraph(subGraph).width(1200).render(Format.PNG).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-subgraph.png"));
-        // Only for testing purposes
-        Graphviz.fromGraph(subGraph).rasterize(Rasterizer.builtIn("dot")).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-subgraph.dot"));
+        Graphviz.fromGraph(subGraph).width(1200).render(Format.PNG).toFile(outputPngFile);
+        Graphviz.fromGraph(subGraph).rasterize(Rasterizer.builtIn("dot")).toFile(outputDotFile);
     }
 }

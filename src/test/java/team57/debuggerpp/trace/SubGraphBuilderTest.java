@@ -1,7 +1,6 @@
 package team57.debuggerpp.trace;
 
 import guru.nidi.graphviz.attribute.Label;
-import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.engine.Rasterizer;
 import guru.nidi.graphviz.model.MutableGraph;
@@ -18,15 +17,18 @@ import static guru.nidi.graphviz.model.Factory.mutGraph;
 import static guru.nidi.graphviz.model.Factory.mutNode;
 import static org.junit.Assert.*;
 
-/* Important: each test has to be run separately, otherwise some tests will fail, because they cannot run in parallel */
 public class SubGraphBuilderTest {
-    public static final String subGraphFilePath = System.getProperty("java.io.tmpdir") + "\\slice-subgraph.png";
-    public static final String subGraphDotFilePath = System.getProperty("java.io.tmpdir") + "\\slice-subgraph.dot";
-    public static final String graphDotFilePath = System.getProperty("java.io.tmpdir") + "\\slice-graph.dot";
-    public static final String sliceLogFilePath = System.getProperty("java.io.tmpdir") + "\\slice.log";
+
+    public final Path tempDir = Files.createTempDirectory("debuggerpp-subgraph-test-");
+    public final File subGraphFile = tempDir.resolve("slice-subgraph.png").toFile();
+    public final File subGraphDotFile = tempDir.resolve("slice-subgraph.dot").toFile();
+    public final File graphDotFile = tempDir.resolve("slice-graph.dot").toFile();
+    public final File sliceLogFile = tempDir.resolve("slice.log").toFile();
+
+    public SubGraphBuilderTest() throws IOException {
+    }
 
     public void setUp() throws IOException {
-        File subGraphFile = new File(subGraphFilePath);
         // Delete the subgraph file before each test
         if (subGraphFile.exists()) {
             subGraphFile.delete();
@@ -39,7 +41,7 @@ public class SubGraphBuilderTest {
                 "Main:14"
         );
         try {
-            Files.write(Path.of(sliceLogFilePath), lines);
+            Files.write(sliceLogFile.toPath(), lines);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -55,7 +57,7 @@ public class SubGraphBuilderTest {
         g.add(node3);
         g.add(node4);
         g.addLink(mutNode("Main:5:").addLink(mutNode("Main:6:")).addLink(mutNode("Main:9:")).addLink(mutNode("Main:14:")));
-        Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("dot")).toFile(new File(graphDotFilePath));
+        Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("dot")).toFile(graphDotFile);
     }
 
     @Test
@@ -63,8 +65,7 @@ public class SubGraphBuilderTest {
     public void testGenerateSubGraph() throws IOException {
         setUp();
         SubGraphBuilder subGraphBuilder = new SubGraphBuilder();
-        subGraphBuilder.generateSubGraph(14);
-        File subGraphFile = new File(subGraphFilePath);
+        subGraphBuilder.generateSubGraph(14, subGraphFile, subGraphDotFile);
         assertTrue(subGraphFile.exists());
         assertTrue(subGraphFile.length() > 0);
     }
@@ -74,8 +75,7 @@ public class SubGraphBuilderTest {
     public void testGenerateSubGraphWithInvalidLine() throws IOException {
         setUp();
         SubGraphBuilder subGraphBuilder = new SubGraphBuilder();
-        subGraphBuilder.generateSubGraph(-1);
-        File subGraphFile = new File(subGraphFilePath);
+        subGraphBuilder.generateSubGraph(-1, subGraphFile, subGraphDotFile);
         assertFalse(subGraphFile.exists());
     }
 
@@ -84,8 +84,7 @@ public class SubGraphBuilderTest {
     public void testGenerateSubGraphWithInvalidLine2() throws IOException {
         setUp();
         SubGraphBuilder subGraphBuilder = new SubGraphBuilder();
-        subGraphBuilder.generateSubGraph(3);
-        File subGraphFile = new File(subGraphFilePath);
+        subGraphBuilder.generateSubGraph(3, subGraphFile, subGraphDotFile);
         assertFalse(subGraphFile.exists());
     }
 
@@ -94,9 +93,9 @@ public class SubGraphBuilderTest {
     public void testGenerateSubGraphNodeNum1() throws IOException {
         setUp();
         SubGraphBuilder subGraphBuilder = new SubGraphBuilder();
-        subGraphBuilder.generateSubGraph(5);
+        subGraphBuilder.generateSubGraph(5, subGraphFile, subGraphDotFile);
         Parser parser = new Parser();
-        MutableGraph g = parser.read(new File(subGraphDotFilePath));
+        MutableGraph g = parser.read(subGraphDotFile);
         assertEquals(1, g.nodes().size());
     }
 
@@ -105,9 +104,9 @@ public class SubGraphBuilderTest {
     public void testGenerateSubGraphNodeNum2() throws IOException {
         setUp();
         SubGraphBuilder subGraphBuilder = new SubGraphBuilder();
-        subGraphBuilder.generateSubGraph(6);
+        subGraphBuilder.generateSubGraph(6, subGraphFile, subGraphDotFile);
         Parser parser = new Parser();
-        MutableGraph g = parser.read(new File(subGraphDotFilePath));
+        MutableGraph g = parser.read(subGraphDotFile);
         assertEquals(2, g.nodes().size());
     }
 
@@ -116,9 +115,9 @@ public class SubGraphBuilderTest {
     public void testGenerateSubGraphNodeNum3() throws IOException {
         setUp();
         SubGraphBuilder subGraphBuilder = new SubGraphBuilder();
-        subGraphBuilder.generateSubGraph(9);
+        subGraphBuilder.generateSubGraph(9, subGraphFile, subGraphDotFile);
         Parser parser = new Parser();
-        MutableGraph g = parser.read(new File(subGraphDotFilePath));
+        MutableGraph g = parser.read(subGraphDotFile);
         assertEquals(3, g.nodes().size());
     }
 
@@ -127,9 +126,9 @@ public class SubGraphBuilderTest {
     public void testGenerateSubGraphNodeNum4() throws IOException {
         setUp();
         SubGraphBuilder subGraphBuilder = new SubGraphBuilder();
-        subGraphBuilder.generateSubGraph(14);
+        subGraphBuilder.generateSubGraph(14, subGraphFile, subGraphDotFile);
         Parser parser = new Parser();
-        MutableGraph g = parser.read(new File(subGraphDotFilePath));
+        MutableGraph g = parser.read(subGraphDotFile);
         assertEquals(4, g.nodes().size());
     }
 }

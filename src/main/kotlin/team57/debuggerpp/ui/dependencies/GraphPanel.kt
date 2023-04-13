@@ -8,6 +8,7 @@ import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.*
 import team57.debuggerpp.trace.SubGraphBuilder
+import java.nio.file.Files
 
 class GraphPanel: JScrollPane(){
     private val panel = JPanel()
@@ -34,9 +35,11 @@ class GraphPanel: JScrollPane(){
     }
 
     private fun getGraph(currentLineNum: Int): BufferedImage {
-        val subGraph: SubGraphBuilder = SubGraphBuilder()
-        subGraph.generateSubGraph(currentLineNum)
-        return ImageIO.read(File(System.getProperty("java.io.tmpdir") + "\\slice-subgraph.png"))
+        val subGraph = SubGraphBuilder()
+        val pngFile = Files.createTempFile("slice-subgraph", ".png").toFile()
+        val dotFile = Files.createTempFile("slice-subgraph", ".dot").toFile()
+        subGraph.generateSubGraph(currentLineNum, pngFile, dotFile)
+        return ImageIO.read(pngFile)
     }
 
     fun emptyPanel() {
