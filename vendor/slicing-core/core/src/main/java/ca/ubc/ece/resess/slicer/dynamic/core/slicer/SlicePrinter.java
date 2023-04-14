@@ -119,11 +119,11 @@ public class SlicePrinter {
         // }
         try {
             Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("pdf")).toFile(new File(outDir + File.separator + "slice-graph.pdf"));
-            Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("dot")).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.dot"));
+            Graphviz.fromGraph(g).rasterize(Rasterizer.builtIn("dot")).toFile(new File(outDir + File.separator + "slice-graph.dot"));
             g.nodeAttrs().add(Color.WHITE).linkAttrs().add(Color.WHITE).graphAttrs().add(Color.WHITE);
             g.nodeAttrs().add(Color.WHITE.font()).linkAttrs().add(Color.WHITE.font());
             g.graphAttrs().add(TRANSPARENT.background());
-            Graphviz.fromGraph(g).width(1200).render(Format.PNG).toFile(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"));
+            Graphviz.fromGraph(g).width(1200).render(Format.PNG).toFile(new File(outDir + File.separator + "slice-graph.png"));
         } catch (IOException | GraphvizException e) {
             AnalysisLogger.warn(true, "Exception when writing slice graph file: {}", e.getMessage());
         }

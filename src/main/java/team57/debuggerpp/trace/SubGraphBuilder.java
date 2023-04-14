@@ -23,17 +23,17 @@ import static guru.nidi.graphviz.attribute.Color.TRANSPARENT;
 import static guru.nidi.graphviz.model.Factory.mutGraph;
 
 public class SubGraphBuilder {
-    public void generateSubGraph(int currentLine, File outputPngFile, File outputDotFile) throws IOException {
+    // TODO: does this support multiple files?
+    public void generateSubGraph(int currentLine, File dotGraphFile, File sliceLogFile, File outputPngFile, File outputDotFile) throws IOException {
         Parser parser = new Parser();
         // Read the full graph
-        MutableGraph g = parser.read(new File(System.getProperty("java.io.tmpdir") + "\\slice-graph.dot"));
+        MutableGraph g = parser.read(dotGraphFile);
         MutableGraph subGraph = mutGraph("Subgraph").setDirected(true);
         System.out.println("Reading dot file success");
 
         // Get the list of lines in the slice
-        String sliceFilePath = System.getProperty("java.io.tmpdir") + "slice.log";
         List<Integer> sliceLines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(sliceFilePath))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(sliceLogFile))) {
             String line;
             Pattern pattern = Pattern.compile("([a-zA-Z]+):(\\d+)");
             while ((line = reader.readLine()) != null) {
@@ -62,6 +62,7 @@ public class SubGraphBuilder {
 
         // Loop through the nodes in the graph. For each node, check if the line# appears before the current line in sliceLines
         // If it does, keep it; if not, remove the node and corresponding links
+        // FIXME: slice.log might be unordered
         for (MutableNode node : g.nodes()) {
 //            System.out.println("Node name :" + node.name());
             String nodeName = String.valueOf(node.name());

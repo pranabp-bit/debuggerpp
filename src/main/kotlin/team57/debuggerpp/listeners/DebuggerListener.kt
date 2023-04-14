@@ -113,7 +113,7 @@ class DebuggerListener : XDebuggerManagerListener {
         // Update UI
         dataPanel.updateDependencies(dataDependencies, location)
         controlPanel.updateDependencies(controlDependencies, location)
-        graphPanel.updateGraph(currentLineNum)
+        graphPanel.updateGraph(currentLineNum, slice)
     }
 
     private fun emptyDependenciesTabs(

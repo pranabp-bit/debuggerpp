@@ -1,6 +1,7 @@
 package team57.debuggerpp.ui.dependencies
 
 import com.intellij.util.ui.StatusText
+import team57.debuggerpp.slicer.ProgramSlice
 import java.awt.Dimension
 import java.awt.GridBagLayout
 import java.awt.image.BufferedImage
@@ -24,8 +25,8 @@ class GraphPanel: JScrollPane(){
         updateUI()
     }
 
-    fun updateGraph(currentLineNum: Int) {
-        val depGraph: BufferedImage = getGraph(currentLineNum)
+    fun updateGraph(currentLineNum: Int, slice: ProgramSlice) {
+        val depGraph: BufferedImage = getGraph(currentLineNum, slice)
         val graphImage = ImageIcon(depGraph).image
         val scaledImage = graphImage.getScaledInstance(graphImage.getWidth(null) / 2, graphImage.getHeight(null)/2, java.awt.Image.SCALE_SMOOTH)
         val graphLabel = JLabel(ImageIcon(scaledImage))
@@ -34,11 +35,11 @@ class GraphPanel: JScrollPane(){
         updateUI()
     }
 
-    private fun getGraph(currentLineNum: Int): BufferedImage {
+    private fun getGraph(currentLineNum: Int, slice: ProgramSlice): BufferedImage {
         val subGraph = SubGraphBuilder()
         val pngFile = Files.createTempFile("slice-subgraph", ".png").toFile()
         val dotFile = Files.createTempFile("slice-subgraph", ".dot").toFile()
-        subGraph.generateSubGraph(currentLineNum, pngFile, dotFile)
+        subGraph.generateSubGraph(currentLineNum, slice.dotGraphFile, slice.sliceLogFile, pngFile, dotFile)
         return ImageIO.read(pngFile)
     }
 

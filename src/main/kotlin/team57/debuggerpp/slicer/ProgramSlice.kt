@@ -1,6 +1,7 @@
 package team57.debuggerpp.slicer
 
 import ca.ubc.ece.resess.slicer.dynamic.core.slicer.DynamicSlice
+import ca.ubc.ece.resess.slicer.dynamic.core.slicer.SlicePrinter
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -12,7 +13,10 @@ import com.intellij.psi.util.parents
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import team57.debuggerpp.util.SourceLocation
+import java.io.File
+import java.nio.file.Files
 import java.util.*
+import kotlin.io.path.pathString
 
 
 class ProgramSlice(private val project: Project?, private val dynamicSlice: DynamicSlice) {
@@ -92,6 +96,18 @@ class ProgramSlice(private val project: Project?, private val dynamicSlice: Dyna
         dynamicSlice.order.getOrNull(0)?.o1?.let {
             SourceLocation(it.javaSourceFile, it.javaSourceLineNo - 1)
         }
+    }
+
+    val dotGraphFile: File by lazy {
+        val outDir = Files.createTempDirectory("slicer4j-dotGraphFile")
+        SlicePrinter.printDotGraph(outDir.pathString, dynamicSlice)
+        return@lazy File(outDir.pathString + File.separator + "slice-graph.dot")
+    }
+
+    val sliceLogFile: File by lazy {
+        val outDir = Files.createTempDirectory("slicer4j-sliceLog")
+        SlicePrinter.printSliceLines(outDir.pathString, dynamicSlice)
+        return@lazy File(outDir.pathString + File.separator + "slice.log")
     }
 
     class Dependencies(
