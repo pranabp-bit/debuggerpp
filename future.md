@@ -34,6 +34,9 @@
   - They key challenge of this is to avoid confusing multiple variables with the same name.
 - Add visuals to indicate breakpoints on non-slice lines have been muted.
 - Disable any "live" actions that can affect the slice.
+- Rename the option to select slicing criteria to "change slicing criterion" if a Debugger++ debugging session is 
+  actively running.
+  - Issue #21.
 
 ## Limitations
 - The plugin only works on deterministic programs.
