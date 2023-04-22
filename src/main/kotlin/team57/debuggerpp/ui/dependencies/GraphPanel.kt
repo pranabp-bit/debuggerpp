@@ -5,7 +5,6 @@ import team57.debuggerpp.slicer.ProgramSlice
 import java.awt.Dimension
 import java.awt.GridBagLayout
 import java.awt.image.BufferedImage
-import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.*
 import team57.debuggerpp.trace.SubGraphBuilder
@@ -18,10 +17,6 @@ class GraphPanel: JScrollPane(){
         preferredSize = Dimension(100, 100)
         border = BorderFactory.createEmptyBorder(0, 10, 0, 10)
         setViewportView(panel)
-        val depGraph: BufferedImage = ImageIO.read(File(System.getProperty("java.io.tmpdir") + "\\slice-graph.png"))
-        val graphLabel = JLabel(ImageIcon(depGraph))
-        panel.removeAll()
-        panel.add(graphLabel)
         updateUI()
     }
 
