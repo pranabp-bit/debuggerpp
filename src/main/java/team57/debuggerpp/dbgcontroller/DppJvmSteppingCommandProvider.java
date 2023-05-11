@@ -16,15 +16,21 @@ import team57.debuggerpp.slicer.ProgramSlice;
 import team57.debuggerpp.util.Utils;
 
 import java.util.Set;
-
+import java.util.HashMap;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.IOException;
 public class DppJvmSteppingCommandProvider extends JvmSteppingCommandProvider {
+    public static HashMap<String, Integer> actionCounts = new HashMap<>();
     @Override
     public DebugProcessImpl.ResumeCommand getStepIntoCommand(SuspendContextImpl suspendContext, boolean ignoreFilters, MethodFilter smartStepFilter, int stepSize) {
+        incrementActionCount("step_into");
         return new StepIntoCommand(suspendContext, ignoreFilters, smartStepFilter, stepSize);
     }
 
     @Override
     public DebugProcessImpl.ResumeCommand getStepOverCommand(SuspendContextImpl suspendContext, boolean ignoreBreakpoints, int stepSize) {
+        incrementActionCount("step_over");
         return new StepOverCommand(suspendContext, ignoreBreakpoints, stepSize);
     }
 
@@ -55,6 +61,33 @@ public class DppJvmSteppingCommandProvider extends JvmSteppingCommandProvider {
             hint.setRestoreBreakpoints(ignoreBreakpoints);
             hint.setIgnoreFilters(ignoreBreakpoints || suspendContext.getDebugProcess().getSession().shouldIgnoreSteppingFilters());
             return hint;
+        }
+    }
+
+    private void incrementActionCount(String action) {
+        int count = actionCounts.getOrDefault(action, 0);
+        actionCounts.put(action, count + 1);
+        System.out.println(action+": "+actionCounts.get(action));
+        System.out.println("Working Directory = " + System.getProperty("user.dir"));
+        // TODO: update the counter in a remote database or file
+        try {
+            // create a FileWriter object to write to the file
+            FileWriter writer = new FileWriter("output.txt");
+            // create a BufferedWriter object to improve performance
+            BufferedWriter buffer = new BufferedWriter(writer);
+
+            // write to the file
+            buffer.write("Hello World!");
+            buffer.newLine(); // add a new line
+            buffer.write("This is a test file.");
+
+            // close the buffer and writer
+            buffer.close();
+            writer.close();
+
+            System.out.println("Data written to file with kotlin changes successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

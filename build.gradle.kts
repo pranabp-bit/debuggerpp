@@ -37,6 +37,9 @@ dependencies {
 
     // Video Recording
     implementation ("com.automation-remarks:video-recorder-junit5:2.0")
+
+    // MongoDB connection
+    implementation ("org.mongodb:mongodb-driver-sync:4.9.1")
 }
 
 tasks {

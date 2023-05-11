@@ -15,7 +15,10 @@ import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebugSessionListener
 import com.intellij.xdebugger.XDebuggerManagerListener
+import com.mongodb.client.MongoClients
+import org.bson.Document
 import team57.debuggerpp.dbgcontroller.DppJavaDebugProcess
+import team57.debuggerpp.dbgcontroller.DppJvmSteppingCommandProvider
 import team57.debuggerpp.slicer.ProgramSlice
 import team57.debuggerpp.ui.EditorSliceVisualizer
 import team57.debuggerpp.ui.Icons
@@ -24,8 +27,7 @@ import team57.debuggerpp.ui.dependencies.DataDependenciesPanel
 import team57.debuggerpp.ui.dependencies.GraphPanel
 import team57.debuggerpp.util.SourceLocation
 import javax.swing.JComponent
-
-
+import kotlin.reflect.KMutableProperty0
 class DebuggerListener : XDebuggerManagerListener {
     companion object {
         private val LOG = Logger.getInstance(DebuggerListener::class.java)
@@ -62,6 +64,20 @@ class DebuggerListener : XDebuggerManagerListener {
             override fun processWillTerminate(processEvent: ProcessEvent, b: Boolean) {
                 sliceVisualizer.stop()
                 emptyDependenciesTabs(dataDepPanel, controlDepPanel, graphPanel)
+                val kotlinMap1: KMutableProperty0<HashMap<String, Int>> = DppJvmSteppingCommandProvider::actionCounts
+                val javaMap: java.util.HashMap<String, Int> = kotlinMap1.get()
+                val kotlinMap: MutableMap<String, Int> = javaMap.toMutableMap()
+
+                for ((key, value) in kotlinMap) {
+                    println("$key = $value")
+                }
+
+                val connectionString = "mongodb+srv://anyuser:anyuser@cluster0.w95f5mz.mongodb.net/?retryWrites=true&w=majority"
+                val client = MongoClients.create(connectionString)
+                val database = client.getDatabase("test")
+                val collection = database.getCollection("myCollection")
+                val document = Document(kotlinMap)
+                collection.insertOne(document)
             }
 
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {}
