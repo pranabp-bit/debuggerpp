@@ -13,12 +13,15 @@
         <listener class="team57.debuggerpp.listeners.DebuggerListener"
                   topic="com.intellij.xdebugger.XDebuggerManagerListener">
         </listener>
+        <listener class="team57.debuggerpp.listeners.BreakpointListener"
+                  topic="com.intellij.xdebugger.breakpoints.XBreakpointListener" />
     </projectListeners>
 
     <extensions defaultExtensionNs="com.intellij">
         <executor implementation="team57.debuggerpp.execute.DynamicSliceDebuggerExecutor"/>
         <programRunner implementation="team57.debuggerpp.execute.DynamicSliceDebuggerRunner"/>
         <debugger.jvmSteppingCommandProvider implementation="team57.debuggerpp.dbgcontroller.DppJvmSteppingCommandProvider"/>
+<!--        <xbreakpointListener implementation="team57.debuggerpp.listeners.BreakpointListener"/>-->
     </extensions>
 
     <actions>
